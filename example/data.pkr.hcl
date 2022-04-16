@@ -1,3 +1,3 @@
-data "scaffolding-my-datasource" "mock-data" {
+data "tart-my-datasource" "mock-data" {
   mock = "mock-config"
 }

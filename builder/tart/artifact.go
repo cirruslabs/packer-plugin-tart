@@ -1,4 +1,4 @@
-package scaffolding
+package tart
 
 // packersdk.Artifact implementation
 type Artifact struct {

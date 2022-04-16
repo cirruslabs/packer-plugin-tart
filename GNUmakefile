@@ -1,4 +1,4 @@
-NAME=scaffolding
+NAME=tart
 BINARY=packer-plugin-${NAME}
 
 COUNT?=1

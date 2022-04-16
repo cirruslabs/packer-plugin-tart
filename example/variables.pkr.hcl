@@ -1,4 +1,4 @@
 locals {
-  foo = data.scaffolding-my-datasource.mock-data.foo
-  bar = data.scaffolding-my-datasource.mock-data.bar
+  foo = data.tart-my-datasource.mock-data.foo
+  bar = data.tart-my-datasource.mock-data.bar
 }

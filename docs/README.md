@@ -58,21 +58,21 @@ The Scaffolding plugin is intended as a starting point for creating Packer plugi
 
 ### Builders
 
-- [builder](/docs/builders/builder-name.mdx) - The scaffolding builder is used to create endless Packer
+- [builder](/docs/builders/tart.mdx) - The tart builder is used to create endless Packer
   plugins using a consistent plugin structure.
 
 ### Provisioners
 
-- [provisioner](/docs/provisioners/provisioner-name.mdx) - The scaffolding provisioner is used to provisioner
+- [provisioner](/docs/provisioners/provisioner-name.mdx) - The tart provisioner is used to provisioner
   Packer builds.
 
 ### Post-processors
 
-- [post-processor](/docs/post-processors/postprocessor-name.mdx) - The scaffolding post-processor is used to
-  export scaffolding builds.
+- [post-processor](/docs/post-processors/postprocessor-name.mdx) - The tart post-processor is used to
+  export tart builds.
 
 ### Data Sources
 
-- [data source](/docs/datasources/datasource-name.mdx) - The scaffolding data source is used to
-  export scaffolding data.
+- [data source](/docs/datasources/datasource-name.mdx) - The tart data source is used to
+  export tart data.
 

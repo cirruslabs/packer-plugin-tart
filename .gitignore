@@ -1,4 +1,6 @@
+.idea
+
 main
 dist/*
-packer-plugin-scaffolding
+packer-plugin-tart
 .docs/*

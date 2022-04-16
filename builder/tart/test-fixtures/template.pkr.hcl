@@ -1,10 +1,10 @@
-source "scaffolding-my-builder" "basic-example" {
+source "tart-my-builder" "basic-example" {
   mock = "mock-config"
 }
 
 build {
   sources = [
-    "source.scaffolding-my-builder.basic-example"
+    "source.tart-my-builder.basic-example"
   ]
 
   provisioner "shell-local" {

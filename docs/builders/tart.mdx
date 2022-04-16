@@ -1,6 +1,6 @@
 ---
 description: >
-  The scaffolding builder is used to create endless Packer plugins using
+  The tart builder is used to create endless Packer plugins using
   a consistent plugin structure.
 page_title: Scaffolding - Builders
 nav_title: Scaffolding
@@ -8,7 +8,7 @@ nav_title: Scaffolding
 
 # Scaffolding
 
-Type: `scaffolding`
+Type: `tart`
 
 <!--
   Include a short description about the builder. This is a good place
@@ -16,7 +16,7 @@ Type: `scaffolding`
   builder environment. See https://www.packer.io/docs/builders/null
 -->
 
-The scaffolding builder is used to create endless Packer plugins using
+The tart builder is used to create endless Packer plugins using
 a consistent plugin structure.
 
 
@@ -51,12 +51,12 @@ a consistent plugin structure.
 
 
 ```hcl
- source "scaffolding" "example" {
+ source "tart" "example" {
    mock = "bird"
  }
 
  build {
-   sources = ["source.scaffolding.example"]
+   sources = ["source.tart.example"]
  }
 ```
 
