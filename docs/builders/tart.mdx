@@ -1,63 +1,36 @@
 ---
 description: >
-  The tart builder is used to create endless Packer plugins using
-  a consistent plugin structure.
-page_title: Scaffolding - Builders
-nav_title: Scaffolding
+  The tart builder is used to create macOS VMs.
+page_title: Tart - Builders
+nav_title: Tart
 ---
 
-# Scaffolding
+# Tart
 
 Type: `tart`
 
-<!--
-  Include a short description about the builder. This is a good place
-  to call out what the builder does, and any requirements for the given
-  builder environment. See https://www.packer.io/docs/builders/null
--->
-
-The tart builder is used to create endless Packer plugins using
-a consistent plugin structure.
+The tart builder is used to create macOS VMs for Apple Silicon.
 
 
 <!-- Builder Configuration Fields -->
 
 ### Required
 
-- `mock` (string) - The name of the mock to use for the Scaffolding API.
+- `vm_name` (string) - The name of the VM to be created.
+- `vm_base_name` (string) - The name of the VM to be used for the initial cloning.
 
-
-<!--
-  Optional Configuration Fields
-
-  Configuration options that are not required or have reasonable defaults
-  should be listed under the optionals section. Defaults values should be
-  noted in the description of the field
--->
-
-### Optional
-
-- `mock_api_url` (string) - The Scaffolding API endpoint to connect to.
-  Defaults to https://example.com
-
-
-
-<!--
-  A basic example on the usage of the builder. Multiple examples
-  can be provided to highlight various build configurations.
-
--->
 ### Example Usage
 
+Here is a basic example:
 
-```hcl
- source "tart" "example" {
-   mock = "bird"
- }
-
- build {
-   sources = ["source.tart.example"]
- }
+```json
+{
+  "type": "tart-local",
+  "vm_name": "my-packer",
+  "vm_base_name": "latest",
+  "ssh_username": "admin",
+  "ssh_password": "admin",
+}
 ```
 
 

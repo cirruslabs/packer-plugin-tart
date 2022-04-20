@@ -4,20 +4,26 @@ package tart
 
 import (
 	"context"
-
+	"errors"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 )
 
 const BuilderId = "tart.builder"
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
-	MockOption          string `mapstructure:"mock"`
+	VMName              string              `mapstructure:"vm_name" required:"true"`
+	VMBaseName          string              `mapstructure:"vm_base_name" required:"true"`
+	Comm                communicator.Config `mapstructure:",squash"`
+
+	ctx interpolate.Context
 }
 
 type Builder struct {
@@ -35,45 +41,53 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 	if err != nil {
 		return nil, nil, err
 	}
-	// Return the placeholder for the generated data that will become available to provisioners and post-processors.
-	// If the builder doesn't generate any data, just return an empty slice of string: []string{}
-	buildGeneratedData := []string{"GeneratedMockData"}
-	return buildGeneratedData, nil, nil
+	var errs *packer.MultiError
+	errs = packer.MultiErrorAppend(errs, b.config.Comm.Prepare(&b.config.ctx)...)
+	return nil, nil, nil
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
 	steps := []multistep.Step{}
 
 	steps = append(steps,
-		&StepSayConfig{
-			MockConfig: b.config.MockOption,
+		new(stepCreateVM),
+		new(stepRun),
+		&communicator.StepConnect{
+			Config:    &b.config.Comm,
+			Host:      TartMachineIP(b.config.VMName),
+			SSHConfig: b.config.Comm.SSHConfigFunc(),
 		},
-		new(commonsteps.StepProvision),
+		&commonsteps.StepProvision{},
+		new(stepStop),
 	)
 
 	// Setup the state bag and initial state for the steps
 	state := new(multistep.BasicStateBag)
+	state.Put("config", &b.config)
+	state.Put("debug", b.config.PackerDebug)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
 
-	// Set the value of the generated data that will become available to provisioners.
-	// To share the data with post-processors, use the StateData in the artifact.
-	state.Put("generated_data", map[string]interface{}{
-		"GeneratedMockData": "mock-build-data",
-	})
-
-	// Run!
-	b.runner = commonsteps.NewRunner(steps, b.config.PackerConfig, ui)
+	// Run
+	b.runner = commonsteps.NewRunnerWithPauseFn(steps, b.config.PackerConfig, ui, state)
 	b.runner.Run(ctx, state)
 
 	// If there was an error, return that
-	if err, ok := state.GetOk("error"); ok {
-		return nil, err.(error)
+	if rawErr, ok := state.GetOk("error"); ok {
+		return nil, rawErr.(error)
 	}
 
-	artifact := &Artifact{
-		// Add the builder generated data to the artifact StateData so that post-processors
-		// can access them.
+	// If we were interrupted or cancelled, then just exit.
+	if _, ok := state.GetOk(multistep.StateCancelled); ok {
+		return nil, errors.New("Build was cancelled.")
+	}
+
+	if _, ok := state.GetOk(multistep.StateHalted); ok {
+		return nil, errors.New("Build was halted.")
+	}
+
+	artifact := &TartVMArtifact{
+		VMName:    b.config.VMName,
 		StateData: map[string]interface{}{"generated_data": state.Get("generated_data")},
 	}
 	return artifact, nil

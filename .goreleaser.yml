@@ -1,5 +1,3 @@
-# This is an example goreleaser.yaml file with some sane defaults.
-# Make sure to check the documentation at http://goreleaser.com
 env:
   - CGO_ENABLED=0
 before:
@@ -9,23 +7,10 @@ before:
     - go test ./...
     # As part of the release doc files are included as a separate deliverable for
     # consumption by Packer.io. To include a separate docs.zip uncomment the following command.
-    #- make ci-release-docs
+    - make ci-release-docs
     # Check plugin compatibility with required version of the Packer SDK
     - make plugin-check
 builds:
-  # A separated build to run the packer-plugins-check only once for a linux_amd64 binary
-  -
-    id: plugin-check
-    mod_timestamp: '{{ .CommitTimestamp }}'
-    flags:
-      - -trimpath #removes all file system paths from the compiled executable
-    ldflags:
-      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
-    goos:
-      - linux
-    goarch:
-      - amd64
-    binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
   -
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
@@ -33,20 +18,9 @@ builds:
     ldflags:
       - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
     goos:
-      - freebsd
-      - windows
-      - linux
       - darwin
     goarch:
-      - amd64
-      - '386'
-      - arm
       - arm64
-    ignore:
-      - goos: darwin
-        goarch: '386'
-      - goos: linux
-        goarch: amd64
     binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 archives:
 - format: zip
@@ -73,8 +47,8 @@ release:
   # draft: true
   # As part of the release doc files are included as a separate deliverable for consumption by Packer.io.
   # To include a separate docs.zip uncomment the extra_files config and the docs.zip command hook above.
-  #extra_files:
-  #- glob: ./docs.zip
+  extra_files:
+    - glob: ./docs.zip
 
 changelog:
-  skip: true
+  use: github-native

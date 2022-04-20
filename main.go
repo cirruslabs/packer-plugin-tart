@@ -11,7 +11,7 @@ import (
 
 func main() {
 	pps := plugin.NewSet()
-	pps.RegisterBuilder("tart", new(tart.Builder))
+	pps.RegisterBuilder("cli", new(tart.Builder))
 	pps.SetVersion(version.PluginVersion)
 	err := pps.Run()
 	if err != nil {

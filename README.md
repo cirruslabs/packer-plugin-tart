@@ -1,90 +1,63 @@
-# Packer Plugin Scaffolding
+# Packer Plugin Tart
+The `Tart` multi-component plugin can be used with HashiCorp [Packer](https://www.packer.io)
+to create custom macOS images. For the full list of available features for this plugin see [docs](docs).
 
-This repository is a template for a Packer multi-component plugin. It is intended as a starting point for creating Packer plugins, containing:
-- A builder ([builder/tart](builder/tart))
-- A provisioner ([provisioner/tart](provisioner/tart))
-- A post-processor ([post-processor/tart](post-processor/tart))
-- A data source ([datasource/tart](datasource/tart))
-- Docs ([docs](docs))
-- A working example ([example](example))
+## Installation
 
-These folders contain boilerplate code that you will need to edit to create your own Packer multi-component plugin.
-A full guide to creating Packer plugins can be found at [Extending Packer](https://www.packer.io/docs/plugins/creation).
+### Using pre-built releases
 
-In this repository you will also find a pre-defined GitHub Action configuration for the release workflow
-(`.goreleaser.yml` and `.github/workflows/release.yml`). The release workflow configuration makes sure the GitHub
-release artifacts are created with the correct binaries and naming conventions.
+#### Using the `packer init` command
 
-Please see the [GitHub template repository documentation](https://docs.github.com/en/free-pro-team@latest/github/creating-cloning-and-archiving-repositories/creating-a-repository-from-a-template)
-for how to create a new repository from this template on GitHub.
+Starting from version 1.7, Packer supports a new `packer init` command allowing
+automatic installation of Packer plugins. Read the
+[Packer documentation](https://www.packer.io/docs/commands/init) for more information.
 
-## Packer plugin projects
+To install this plugin, copy and paste this code into your Packer configuration .
+Then, run [`packer init`](https://www.packer.io/docs/commands/init).
 
-Here's a non exaustive list of Packer plugins that you can checkout:
-
-* [github.com/hashicorp/packer-plugin-docker](https://github.com/hashicorp/packer-plugin-docker)
-* [github.com/exoscale/packer-plugin-exoscale](https://github.com/exoscale/packer-plugin-exoscale)
-* [github.com/sylviamoss/packer-plugin-comment](https://github.com/sylviamoss/packer-plugin-comment)
-* [github.com/hashicorp/packer-plugin-hashicups](https://github.com/hashicorp/packer-plugin-hashicups)
-
-Looking at their code will give you good examples.
-
-## Running Acceptance Tests
-
-Make sure to install the plugin with `go build .` and to have Packer installed locally.
-Then source the built binary to the plugin path with `cp packer-plugin-tart ~/.packer.d/plugins/packer-plugin-tart`
-Once everything needed is set up, run:
-```
-PACKER_ACC=1 go test -count 1 -v ./... -timeout=120m
+```hcl
+packer {
+  required_plugins {
+    tart = {
+      version = ">= 0.1.0"
+      source  = "github.com/hashicorp/tart"
+    }
+  }
+}
 ```
 
-This will run the acceptance tests for all plugins in this set.
 
-## Test Plugin Example Action
+#### Manual installation
 
-This tart configures a [manually triggered plugin test action](/.github/workflows/test-plugin-example.yml).
-By default, the action will run Packer at the latest version to init, validate, and build the example configuration
-within the [example](example) folder. This is useful to quickly test a basic template of your plugin against Packer.
+You can find pre-built binary releases of the plugin [here](https://github.com/hashicorp/packer-plugin-tart/releases).
+Once you have downloaded the latest archive corresponding to your target OS,
+uncompress it to retrieve the plugin binary file corresponding to your platform.
+To install the plugin, please follow the Packer documentation on
+[installing a plugin](https://www.packer.io/docs/extending/plugins/#installing-plugins).
 
-The example must contain the `required_plugins` block and require your plugin at the latest or any other released version.
-This will help test and validate plugin releases.
 
-## Registering Documentation on Packer.io
+### From Sources
 
-Documentation for a plugin is maintained within the `docs` directory and served on GitHub.
-To include plugin docs on Packer.io a global pre-hook has been added to the main tart .goreleaser.yml file, that if uncommented will generate and include a docs.zip file as part of the plugin release.
+If you prefer to build the plugin from sources, clone the GitHub repository
+locally and run the command `go build` from the root
+directory. Upon successful compilation, a `packer-plugin-tart` plugin
+binary file can be found in the root directory.
+To install the compiled plugin, please follow the official Packer documentation
+on [installing a plugin](https://www.packer.io/docs/extending/plugins/#installing-plugins).
 
-The `docs.zip` file will contain all of the `.mdx` files under the plugins root `docs/` directory that can be consumed remotely by Packer.io.
 
-Once the first `docs.zip` file has been included into a release you will need to open a one time pull-request against [hashicorp/packer](https://github.com/hashicorp/packer) to register the plugin docs.
-This is done by adding the block below for the respective plugin to the file [website/data/docs-remote-navigation.js](https://github.com/hashicorp/packer/blob/master/website/data/docs-remote-plugins.json).
+### Configuration
 
-```json
-{
-   "title": "Scaffolding",
-   "path": "tart",
-   "repo": "hashicorp/packer-plugin-tart",
-   "version": "latest",
-   "sourceBranch": "main"
- }
-```
+For more information on how to configure the plugin, please read the
+documentation located in the [`docs/`](docs) directory.
 
-If a plugin maintainer wishes to only include a specific version of released docs then the `"version"` key in the above configuration should be set to a released version of the plugin. Otherwise it should be set to `"latest"`.
 
-The `"sourceBranch"` key in the above configuration ensures potential contributors can link back to source files in the plugin repository from the Packer docs site. If a `"sourceBranch"` value is not present, it will default to `"main"`.
+## Contributing
 
-The documentation structure needed for Packer.io can be generated manually, by creating a simple zip file called `docs.zip` of the docs directory and included in the plugin release.
-
-```/bin/bash
-[[ -d docs/ ]] && zip -r docs.zip docs/
-```
-
-Once the first `docs.zip` file has been included into a release you will need to open a one time pull-request against [hashicorp/packer](https://github.com/hashicorp/packer) to register the plugin docs.
-
-# Requirements
-
--	[packer-plugin-sdk](https://github.com/hashicorp/packer-plugin-sdk) >= v0.2.9
--	[Go](https://golang.org/doc/install) >= 1.17
-
-## Packer Compatibility
-This tart template is compatible with Packer >= v1.7.0
+* If you think you've found a bug in the code or you have a question regarding
+  the usage of this software, please reach out to us by opening an issue in
+  this GitHub repository.
+* Contributions to this project are welcome: if you want to add a feature or a
+  fix a bug, please do so by opening a Pull Request in this GitHub repository.
+  In case of feature contribution, we kindly ask you to open an issue to
+  discuss it beforehand.

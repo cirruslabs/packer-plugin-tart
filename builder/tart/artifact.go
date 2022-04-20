@@ -1,32 +1,52 @@
 package tart
 
-// packersdk.Artifact implementation
-type Artifact struct {
+import (
+	"os"
+	"path"
+)
+
+// packersdk.TartVMArtifact implementation
+type TartVMArtifact struct {
+	VMName string
 	// StateData should store data such as GeneratedData
 	// to be shared with post-processors
 	StateData map[string]interface{}
 }
 
-func (*Artifact) BuilderId() string {
+func (*TartVMArtifact) BuilderId() string {
 	return BuilderId
 }
 
-func (a *Artifact) Files() []string {
-	return []string{}
+func (a *TartVMArtifact) Files() []string {
+	baseDir := a.vmDirPath()
+	entries, err := os.ReadDir(baseDir)
+	if err != nil {
+		return []string{}
+	}
+	result := make([]string, len(entries))
+	for index, entry := range entries {
+		result[index] = path.Join(entry.Name())
+	}
+	return result
 }
 
-func (*Artifact) Id() string {
-	return ""
+func (a *TartVMArtifact) Id() string {
+	return a.VMName
 }
 
-func (a *Artifact) String() string {
-	return ""
+func (a *TartVMArtifact) String() string {
+	return a.VMName
 }
 
-func (a *Artifact) State(name string) interface{} {
+func (a *TartVMArtifact) State(name string) interface{} {
 	return a.StateData[name]
 }
 
-func (a *Artifact) Destroy() error {
-	return nil
+func (a *TartVMArtifact) Destroy() error {
+	return os.RemoveAll(a.vmDirPath())
+}
+
+func (a *TartVMArtifact) vmDirPath() string {
+	home, _ := os.UserHomeDir()
+	return path.Join(home, ".tart", "vms", a.VMName)
 }
