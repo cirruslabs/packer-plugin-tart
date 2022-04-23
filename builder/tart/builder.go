@@ -58,7 +58,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			SSHConfig: b.config.Comm.SSHConfigFunc(),
 		},
 		&commonsteps.StepProvision{},
-		new(stepStop),
 	)
 
 	// Setup the state bag and initial state for the steps
