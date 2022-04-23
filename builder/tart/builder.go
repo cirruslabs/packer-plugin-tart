@@ -21,6 +21,7 @@ type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	VMName              string              `mapstructure:"vm_name" required:"true"`
 	VMBaseName          string              `mapstructure:"vm_base_name" required:"true"`
+	DiskSizeGb          uint16              `mapstructure:"disk_size_gb" required:"false"`
 	Comm                communicator.Config `mapstructure:",squash"`
 
 	ctx interpolate.Context
@@ -51,12 +52,14 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 
 	steps = append(steps,
 		new(stepCreateVM),
+		new(stepDiskFilePrepare),
 		new(stepRun),
 		&communicator.StepConnect{
 			Config:    &b.config.Comm,
 			Host:      TartMachineIP(b.config.VMName),
 			SSHConfig: b.config.Comm.SSHConfigFunc(),
 		},
+		new(stepResize),
 		&commonsteps.StepProvision{},
 		new(stepStop),
 	)
