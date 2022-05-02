@@ -21,6 +21,9 @@ type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	VMName              string              `mapstructure:"vm_name" required:"true"`
 	VMBaseName          string              `mapstructure:"vm_base_name" required:"true"`
+	CpuCount            uint8               `mapstructure:"cpu_count" required:"false"`
+	MemoryGb            uint16              `mapstructure:"memory_gb" required:"false"`
+	Display             string              `mapstructure:"display" required:"false"`
 	DiskSizeGb          uint16              `mapstructure:"disk_size_gb" required:"false"`
 	Comm                communicator.Config `mapstructure:",squash"`
 
