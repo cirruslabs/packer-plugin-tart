@@ -61,7 +61,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		},
 		new(stepResize),
 		&commonsteps.StepProvision{},
-		new(stepStop),
 	)
 
 	// Setup the state bag and initial state for the steps
