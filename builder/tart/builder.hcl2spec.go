@@ -20,6 +20,9 @@ type FlatConfig struct {
 	PackerSensitiveVars       []string          `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
 	VMName                    *string           `mapstructure:"vm_name" required:"true" cty:"vm_name" hcl:"vm_name"`
 	VMBaseName                *string           `mapstructure:"vm_base_name" required:"true" cty:"vm_base_name" hcl:"vm_base_name"`
+	CpuCount                  *uint8            `mapstructure:"cpu_count" required:"false" cty:"cpu_count" hcl:"cpu_count"`
+	MemoryGb                  *uint16           `mapstructure:"memory_gb" required:"false" cty:"memory_gb" hcl:"memory_gb"`
+	Display                   *string           `mapstructure:"display" required:"false" cty:"display" hcl:"display"`
 	DiskSizeGb                *uint16           `mapstructure:"disk_size_gb" required:"false" cty:"disk_size_gb" hcl:"disk_size_gb"`
 	Type                      *string           `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
 	PauseBeforeConnect        *string           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
@@ -94,6 +97,9 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"packer_sensitive_variables":   &hcldec.AttrSpec{Name: "packer_sensitive_variables", Type: cty.List(cty.String), Required: false},
 		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
 		"vm_base_name":                 &hcldec.AttrSpec{Name: "vm_base_name", Type: cty.String, Required: false},
+		"cpu_count":                    &hcldec.AttrSpec{Name: "cpu_count", Type: cty.Number, Required: false},
+		"memory_gb":                    &hcldec.AttrSpec{Name: "memory_gb", Type: cty.Number, Required: false},
+		"display":                      &hcldec.AttrSpec{Name: "display", Type: cty.String, Required: false},
 		"disk_size_gb":                 &hcldec.AttrSpec{Name: "disk_size_gb", Type: cty.Number, Required: false},
 		"communicator":                 &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":      &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},
