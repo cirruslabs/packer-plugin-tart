@@ -34,7 +34,7 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 
 	ui.Say("Updating virtual machine resources...")
 
-	setArguments := []string{"set"}
+	setArguments := []string{"set", config.VMName}
 	if config.CpuCount > 0 {
 		setArguments = append(setArguments, "--cpu", strconv.FormatUint(uint64(config.CpuCount), 10))
 	}
