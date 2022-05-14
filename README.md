@@ -19,8 +19,8 @@ Then, run [`packer init`](https://www.packer.io/docs/commands/init).
 packer {
   required_plugins {
     tart = {
-      version = ">= 0.1.0"
-      source  = "github.com/hashicorp/tart"
+      version = ">= 0.3.1"
+      source  = "github.com/cirruslabs/tart"
     }
   }
 }
@@ -29,7 +29,7 @@ packer {
 
 #### Manual installation
 
-You can find pre-built binary releases of the plugin [here](https://github.com/hashicorp/packer-plugin-tart/releases).
+You can find pre-built binary releases of the plugin [here](https://github.com/cirruslabs/packer-plugin-tart/releases).
 Once you have downloaded the latest archive corresponding to your target OS,
 uncompress it to retrieve the plugin binary file corresponding to your platform.
 To install the plugin, please follow the Packer documentation on
