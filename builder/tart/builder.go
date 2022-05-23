@@ -25,6 +25,7 @@ type Config struct {
 	MemoryGb            uint16              `mapstructure:"memory_gb" required:"false"`
 	Display             string              `mapstructure:"display" required:"false"`
 	DiskSizeGb          uint16              `mapstructure:"disk_size_gb" required:"false"`
+	Headless            bool                `mapstructure:"headless" required:"false"`
 	Comm                communicator.Config `mapstructure:",squash"`
 
 	ctx interpolate.Context

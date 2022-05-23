@@ -18,7 +18,11 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Starting the virtual machine...")
-	cmd := exec.Command("tart", "run", "--no-graphics", config.VMName)
+	runArgs := []string{"run", config.VMName}
+	if config.Headless {
+		runArgs = append(runArgs, "--no-graphics")
+	}
+	cmd := exec.Command("tart", runArgs...)
 	writer := uiWriter{ui: ui}
 	cmd.Stdout = writer
 	cmd.Stderr = writer
