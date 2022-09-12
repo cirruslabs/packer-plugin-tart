@@ -1,4 +1,4 @@
-source "tart" "example" {
+source "tart-cli" "example" {
   vm_name          = "testing"
   vm_base_name     = "latest"
   ssh_password     = "admin"
