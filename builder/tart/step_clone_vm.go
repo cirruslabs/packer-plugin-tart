@@ -7,16 +7,16 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
-type stepCreateVM struct{}
+type stepCloneVM struct{}
 
-func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (s *stepCloneVM) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 
-	ui.Say("Creating virtual machine...")
+	ui.Say("Cloning virtual machine...")
 
-	if _, err := TartExec("create", "--from-ipsw", config.FromIPSW, config.VMName); err != nil {
-		err := fmt.Errorf("Failed to create a VM: %s", err)
+	if _, err := TartExec("clone", config.VMBaseName, config.VMName); err != nil {
+		err := fmt.Errorf("Error cloning VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 
@@ -26,6 +26,6 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 	return multistep.ActionContinue
 }
 
-func (s *stepCreateVM) Cleanup(state multistep.StateBag) {
+func (s *stepCloneVM) Cleanup(state multistep.StateBag) {
 	// nothing to clean up
 }
