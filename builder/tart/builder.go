@@ -21,6 +21,7 @@ const BuilderId = "tart.builder"
 type Config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	bootcommand.VNCConfig `mapstructure:",squash"`
+	FromIPSW              string              `mapstructure:"from_ipsw" required:"true"`
 	VMName                string              `mapstructure:"vm_name" required:"true"`
 	VMBaseName            string              `mapstructure:"vm_base_name" required:"true"`
 	CpuCount              uint8               `mapstructure:"cpu_count" required:"false"`
@@ -56,8 +57,14 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
 	steps := []multistep.Step{}
 
+	if b.config.FromIPSW != "" {
+		steps = append(steps, new(stepCreateVM))
+	} else {
+		steps = append(steps, new(stepCloneVM))
+	}
+
 	steps = append(steps,
-		new(stepCreateVM),
+		new(stepSetVM),
 		new(stepDiskFilePrepare),
 		new(stepRun),
 		&communicator.StepConnect{
