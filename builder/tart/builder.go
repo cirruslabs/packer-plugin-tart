@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -18,15 +19,16 @@ import (
 const BuilderId = "tart.builder"
 
 type Config struct {
-	common.PackerConfig `mapstructure:",squash"`
-	VMName              string              `mapstructure:"vm_name" required:"true"`
-	VMBaseName          string              `mapstructure:"vm_base_name" required:"true"`
-	CpuCount            uint8               `mapstructure:"cpu_count" required:"false"`
-	MemoryGb            uint16              `mapstructure:"memory_gb" required:"false"`
-	Display             string              `mapstructure:"display" required:"false"`
-	DiskSizeGb          uint16              `mapstructure:"disk_size_gb" required:"false"`
-	Headless            bool                `mapstructure:"headless" required:"false"`
-	Comm                communicator.Config `mapstructure:",squash"`
+	common.PackerConfig   `mapstructure:",squash"`
+	bootcommand.VNCConfig `mapstructure:",squash"`
+	VMName                string              `mapstructure:"vm_name" required:"true"`
+	VMBaseName            string              `mapstructure:"vm_base_name" required:"true"`
+	CpuCount              uint8               `mapstructure:"cpu_count" required:"false"`
+	MemoryGb              uint16              `mapstructure:"memory_gb" required:"false"`
+	Display               string              `mapstructure:"display" required:"false"`
+	DiskSizeGb            uint16              `mapstructure:"disk_size_gb" required:"false"`
+	Headless              bool                `mapstructure:"headless" required:"false"`
+	Comm                  communicator.Config `mapstructure:",squash"`
 
 	ctx interpolate.Context
 }
