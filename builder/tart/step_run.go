@@ -78,6 +78,7 @@ func (u uiWriter) Write(p []byte) (n int, err error) {
 
 // Cleanup stops the VM.
 func (s *stepRun) Cleanup(state multistep.StateBag) {
+	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	communicator := state.Get("communicator").(packersdk.Communicator)
@@ -88,7 +89,7 @@ func (s *stepRun) Cleanup(state multistep.StateBag) {
 
 	ui.Say("Gracefully shutting down the VM...")
 	shutdownCmd := packersdk.RemoteCmd{
-		Command: "sudo shutdown -h now",
+		Command: fmt.Sprintf("echo %s | sudo -S shutdown -h now", config.Comm.Password()),
 	}
 
 	err := shutdownCmd.RunWithUi(context.Background(), communicator, ui)
