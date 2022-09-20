@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"strconv"
 )
 
 type stepCreateVM struct{}
@@ -15,7 +16,17 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 
 	ui.Say("Creating virtual machine...")
 
-	if _, err := TartExec("create", "--from-ipsw", config.FromIPSW, config.VMName); err != nil {
+	createArguments := []string{
+		"create", "--from-ipsw", config.FromIPSW,
+	}
+
+	if config.DiskSizeGb > 0 {
+		createArguments = append(createArguments, "--disk-size", strconv.Itoa(int(config.DiskSizeGb)))
+	}
+
+	createArguments = append(createArguments, config.VMName)
+
+	if _, err := TartExec(createArguments...); err != nil {
 		err := fmt.Errorf("Failed to create a VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
