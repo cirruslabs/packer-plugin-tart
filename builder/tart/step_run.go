@@ -84,22 +84,19 @@ func (s *stepRun) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 
-	communicator := state.Get("communicator").(packersdk.Communicator)
+	communicator := state.Get("communicator")
+	if communicator != nil {
+		ui.Say("Gracefully shutting down the VM...")
 
-	if communicator == nil {
-		return
-	}
+		shutdownCmd := packersdk.RemoteCmd{
+			Command: fmt.Sprintf("echo %s | sudo -S shutdown -h now", config.Comm.Password()),
+		}
 
-	ui.Say("Gracefully shutting down the VM...")
-	shutdownCmd := packersdk.RemoteCmd{
-		Command: fmt.Sprintf("echo %s | sudo -S shutdown -h now", config.Comm.Password()),
-	}
-
-	err := shutdownCmd.RunWithUi(context.Background(), communicator, ui)
-
-	if err != nil {
-		ui.Say("Failed to gracefully shutdown VM...")
-		ui.Error(err.Error())
+		err := shutdownCmd.RunWithUi(context.Background(), communicator.(packersdk.Communicator), ui)
+		if err != nil {
+			ui.Say("Failed to gracefully shutdown VM...")
+			ui.Error(err.Error())
+		}
 	}
 
 	cmd := state.Get("tart-cmd").(*exec.Cmd)
