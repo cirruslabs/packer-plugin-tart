@@ -19,8 +19,12 @@ func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multiste
 		return multistep.ActionContinue
 	}
 
-	ui.Say("Let's SSH in and claim the new space for the disk...")
 	communicator := state.Get("communicator").(packersdk.Communicator)
+	if communicator == nil {
+		return multistep.ActionContinue
+	}
+
+	ui.Say("Let's SSH in and claim the new space for the disk...")
 
 	ui.Say("Freeing space...")
 	repairCmd := packersdk.RemoteCmd{

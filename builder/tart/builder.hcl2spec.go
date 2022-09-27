@@ -26,6 +26,7 @@ type FlatConfig struct {
 	FromIPSW                  *string           `mapstructure:"from_ipsw" required:"true" cty:"from_ipsw" hcl:"from_ipsw"`
 	VMName                    *string           `mapstructure:"vm_name" required:"true" cty:"vm_name" hcl:"vm_name"`
 	VMBaseName                *string           `mapstructure:"vm_base_name" required:"true" cty:"vm_base_name" hcl:"vm_base_name"`
+	Recovery                  *bool             `mapstructure:"recovery" required:"false" cty:"recovery" hcl:"recovery"`
 	CpuCount                  *uint8            `mapstructure:"cpu_count" required:"false" cty:"cpu_count" hcl:"cpu_count"`
 	MemoryGb                  *uint16           `mapstructure:"memory_gb" required:"false" cty:"memory_gb" hcl:"memory_gb"`
 	Display                   *string           `mapstructure:"display" required:"false" cty:"display" hcl:"display"`
@@ -110,6 +111,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"from_ipsw":                    &hcldec.AttrSpec{Name: "from_ipsw", Type: cty.String, Required: false},
 		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
 		"vm_base_name":                 &hcldec.AttrSpec{Name: "vm_base_name", Type: cty.String, Required: false},
+		"recovery":                     &hcldec.AttrSpec{Name: "recovery", Type: cty.Bool, Required: false},
 		"cpu_count":                    &hcldec.AttrSpec{Name: "cpu_count", Type: cty.Number, Required: false},
 		"memory_gb":                    &hcldec.AttrSpec{Name: "memory_gb", Type: cty.Number, Required: false},
 		"display":                      &hcldec.AttrSpec{Name: "display", Type: cty.String, Required: false},

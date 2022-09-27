@@ -24,6 +24,7 @@ type Config struct {
 	FromIPSW              string              `mapstructure:"from_ipsw" required:"true"`
 	VMName                string              `mapstructure:"vm_name" required:"true"`
 	VMBaseName            string              `mapstructure:"vm_base_name" required:"true"`
+	Recovery              bool                `mapstructure:"recovery" required:"false"`
 	CpuCount              uint8               `mapstructure:"cpu_count" required:"false"`
 	MemoryGb              uint16              `mapstructure:"memory_gb" required:"false"`
 	Display               string              `mapstructure:"display" required:"false"`
@@ -59,7 +60,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 
 	if b.config.FromIPSW != "" {
 		steps = append(steps, new(stepCreateVM))
-	} else {
+	} else if b.config.VMBaseName != "" {
 		steps = append(steps, new(stepCloneVM))
 	}
 
@@ -67,14 +68,19 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		new(stepSetVM),
 		new(stepDiskFilePrepare),
 		new(stepRun),
-		&communicator.StepConnect{
-			Config:    &b.config.Comm,
-			Host:      TartMachineIP(b.config.VMName),
-			SSHConfig: b.config.Comm.SSHConfigFunc(),
-		},
-		new(stepResize),
-		&commonsteps.StepProvision{},
 	)
+
+	if !b.config.Recovery {
+		steps = append(steps,
+			&communicator.StepConnect{
+				Config:    &b.config.Comm,
+				Host:      TartMachineIP(b.config.VMName),
+				SSHConfig: b.config.Comm.SSHConfigFunc(),
+			},
+			new(stepResize),
+			&commonsteps.StepProvision{},
+		)
+	}
 
 	// Setup the state bag and initial state for the steps
 	state := new(multistep.BasicStateBag)
