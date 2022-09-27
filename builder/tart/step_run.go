@@ -35,6 +35,9 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	if !config.DisableVNC {
 		runArgs = append(runArgs, "--vnc-experimental")
 	}
+	if config.Recovery {
+		runArgs = append(runArgs, "--recovery")
+	}
 	cmd := exec.Command("tart", runArgs...)
 	stdout := bytes.NewBufferString("")
 	cmd.Stdout = stdout
