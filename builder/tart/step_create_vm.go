@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"strconv"
+	"time"
 )
 
 type stepCreateVM struct{}
@@ -32,6 +33,11 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 		ui.Error(err.Error())
 
 		return multistep.ActionHalt
+	}
+
+	if config.CreateGraceTime != 0 {
+		ui.Say("Waiting some time to let the Virtualization.Framework's installation process to finish correctly...")
+		time.Sleep(config.CreateGraceTime)
 	}
 
 	return multistep.ActionContinue

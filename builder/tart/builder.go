@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	"time"
 )
 
 const BuilderId = "tart.builder"
@@ -30,6 +31,7 @@ type Config struct {
 	Display               string              `mapstructure:"display" required:"false"`
 	DiskSizeGb            uint16              `mapstructure:"disk_size_gb" required:"false"`
 	Headless              bool                `mapstructure:"headless" required:"false"`
+	CreateGraceTime       time.Duration       `mapstructure:"create_grace_time" required:"false"`
 	Comm                  communicator.Config `mapstructure:",squash"`
 
 	ctx interpolate.Context
