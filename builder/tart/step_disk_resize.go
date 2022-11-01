@@ -45,7 +45,7 @@ func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multiste
 
 	diskName, partitionName, err := ParseDiskUtilPlistOutput(buf.Bytes())
 	if err != nil {
-		ui.Error(fmt.Sprintf("failed to parse \"diskutil -plist physical\" output: %v", err))
+		ui.Error(fmt.Sprintf("failed to parse \"diskutil list -plist physical\" output: %v", err))
 
 		return multistep.ActionHalt
 	}
