@@ -7,6 +7,11 @@ import (
 
 const expectedLastPartitionContent = "Apple_APFS"
 
+// ParseDiskUtilPlistOutput parses "diskutil list -plist" output,
+// makes sure there's only one disk on the system and returns
+// its name and the name of the last partition, additionally
+// validating that the last partition is not a recovery one
+// (which we should've deleted for the disk expansion to work).
 func ParseDiskUtilPlistOutput(input []byte) (string, string, error) {
 	unmarshalledInput := map[string]interface{}{}
 
