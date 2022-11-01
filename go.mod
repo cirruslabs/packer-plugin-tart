@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/diskfs/go-diskfs v1.2.0
-	github.com/hashicorp/hcl/v2 v2.14.0
+	github.com/hashicorp/hcl/v2 v2.14.1
 	github.com/hashicorp/packer-plugin-sdk v0.3.2
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/stretchr/testify v1.7.0
