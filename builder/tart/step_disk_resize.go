@@ -1,7 +1,9 @@
 package tart
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
@@ -26,12 +28,34 @@ func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multiste
 
 	ui.Say("Let's SSH in and claim the new space for the disk...")
 
-	ui.Say("Freeing space...")
-	repairCmd := packersdk.RemoteCmd{
-		Command: "yes | diskutil repairDisk disk0",
+	// Determine the disk and a partition to act on
+	listCmd := packersdk.RemoteCmd{
+		Command: "diskutil list -plist physical",
 	}
 
-	err := repairCmd.RunWithUi(ctx, communicator, ui)
+	buf := bytes.NewBufferString("")
+	listCmd.Stdout = buf
+
+	err := listCmd.RunWithUi(ctx, communicator, &QuietUi{BaseUi: ui})
+	if err != nil {
+		ui.Error(err.Error())
+
+		return multistep.ActionHalt
+	}
+
+	diskName, partitionName, err := ParseDiskUtilPlistOutput(buf.Bytes())
+	if err != nil {
+		ui.Error(fmt.Sprintf("failed to parse \"diskutil list -plist physical\" output: %v", err))
+
+		return multistep.ActionHalt
+	}
+
+	ui.Say("Freeing space...")
+	repairCmd := packersdk.RemoteCmd{
+		Command: fmt.Sprintf("yes | diskutil repairDisk %s", diskName),
+	}
+
+	err = repairCmd.RunWithUi(ctx, communicator, ui)
 
 	if err != nil {
 		ui.Error(err.Error())
@@ -39,7 +63,7 @@ func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multiste
 	}
 
 	resizeCmd := packersdk.RemoteCmd{
-		Command: "diskutil apfs resizeContainer disk0s2 0",
+		Command: fmt.Sprintf("diskutil apfs resizeContainer %s 0", partitionName),
 	}
 
 	ui.Say("Resizing the partition...")
