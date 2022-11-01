@@ -7,7 +7,9 @@ require (
 	github.com/hashicorp/hcl/v2 v2.14.0
 	github.com/hashicorp/packer-plugin-sdk v0.3.2
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
+	github.com/stretchr/testify v1.7.0
 	github.com/zclconf/go-cty v1.10.0
+	howett.net/plist v1.0.0
 )
 
 require (
@@ -21,6 +23,7 @@ require (
 	github.com/aws/aws-sdk-go v1.40.34 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dylanmei/iso8601 v0.1.0 // indirect
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
@@ -70,6 +73,7 @@ require (
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pkg/sftp v1.13.2 // indirect
 	github.com/pkg/xattr v0.4.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
@@ -91,4 +95,5 @@ require (
 	gopkg.in/djherbis/times.v1 v1.2.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
