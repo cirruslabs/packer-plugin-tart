@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"strings"
 )
 
 type stepResize struct {
@@ -26,6 +27,24 @@ func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multiste
 		return multistep.ActionContinue
 	}
 
+	// determine OS
+	osCmd := packersdk.RemoteCmd{
+		Command: "uname -s",
+	}
+	osBuf := bytes.NewBufferString("")
+	osCmd.Stdout = osBuf
+
+	err := osCmd.RunWithUi(ctx, communicator, &QuietUi{BaseUi: ui})
+	if err != nil {
+		ui.Error(err.Error())
+		return multistep.ActionHalt
+	}
+
+	if strings.TrimSpace(osBuf.String()) != "Darwin" {
+		ui.Error("Automatic partition resizing not implemented, guest OS might not see the full disk capacity.")
+		return multistep.ActionContinue
+	}
+
 	ui.Say("Let's SSH in and claim the new space for the disk...")
 
 	// Determine the disk and a partition to act on
@@ -36,7 +55,7 @@ func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multiste
 	buf := bytes.NewBufferString("")
 	listCmd.Stdout = buf
 
-	err := listCmd.RunWithUi(ctx, communicator, &QuietUi{BaseUi: ui})
+	err = listCmd.RunWithUi(ctx, communicator, &QuietUi{BaseUi: ui})
 	if err != nil {
 		ui.Error(err.Error())
 
