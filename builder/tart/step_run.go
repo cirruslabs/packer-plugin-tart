@@ -59,7 +59,7 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 	state.Put("tart-cmd", cmd)
 
-	if !config.DisableVNC {
+	if (len(config.FromISO) == 0) && !config.DisableVNC {
 		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout) {
 			return multistep.ActionHalt
 		}

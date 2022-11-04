@@ -23,6 +23,7 @@ type Config struct {
 	common.PackerConfig   `mapstructure:",squash"`
 	bootcommand.VNCConfig `mapstructure:",squash"`
 	FromIPSW              string              `mapstructure:"from_ipsw" required:"true"`
+	FromISO               []string            `mapstructure:"from_iso" required:"true"`
 	VMName                string              `mapstructure:"vm_name" required:"true"`
 	VMBaseName            string              `mapstructure:"vm_base_name" required:"true"`
 	Recovery              bool                `mapstructure:"recovery" required:"false"`
@@ -62,6 +63,8 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 
 	if b.config.FromIPSW != "" {
 		steps = append(steps, new(stepCreateVM))
+	} else if len(b.config.FromISO) > 0 {
+		steps = append(steps, new(stepCreateLinuxVM))
 	} else if b.config.VMBaseName != "" {
 		steps = append(steps, new(stepCloneVM))
 	}

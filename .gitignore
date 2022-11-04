@@ -4,3 +4,6 @@ main
 dist/*
 packer-plugin-tart
 .docs/*
+
+example/*.iso
+example/cidata/*
