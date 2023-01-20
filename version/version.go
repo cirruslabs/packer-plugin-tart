@@ -6,7 +6,7 @@ import (
 
 var (
 	// Version is the main version number that is being run at the moment.
-	Version = "0.3.0"
+	Version = "0.6.2"
 
 	// VersionPrerelease is A pre-release marker for the Version. If this is ""
 	// (empty string) then it means that it is a final release. Otherwise, this

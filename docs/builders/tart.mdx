@@ -45,6 +45,7 @@ Below we'll go through available options of this Packer plugin
 - `ssh_username` (string) - Username to use for the communication over SSH to run provision steps.
 - `ssh_password` (string) - Password to use for the communication over SSH to run provision steps.
 - `headless` (boolean) - Whether to show graphics interface of a VM. Useful for debugging `boot_command`.
+- `rosetta` (string) - Whether to enable Rosetta support of a Linux guest VM. Useful for running non arm64 programs in the guest VM. A common used value is `rosetta`. For further details and explanation run `tart run --help`
 - `boot_command` (array of strings) - This is an array of commands to type when the virtual machine is first booted. The goal of these commands should be to type just enough to initialize the operating system installer.
 
 ### Example Usage

@@ -20,7 +20,7 @@ func (s *stepCreateLinuxVM) Run(ctx context.Context, state multistep.StateBag) m
 	ui.Say("Creating virtual machine...")
 
 	createArguments := []string{
-		"create",  "--linux",
+		"create", "--linux",
 	}
 
 	if config.DiskSizeGb > 0 {
@@ -60,11 +60,14 @@ func (s *stepCreateLinuxVM) RunInstaller(ctx context.Context, state multistep.St
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Starting the virtual machine for installation...")
-	runArgs := []string{"run", config.VMName, }
+	runArgs := []string{"run", config.VMName}
 	if config.Headless {
 		runArgs = append(runArgs, "--no-graphics")
 	} else {
 		runArgs = append(runArgs, "--graphics")
+	}
+	if config.Rosetta != "" {
+		runArgs = append(runArgs, fmt.Sprintf("--rosetta=%s", config.Rosetta))
 	}
 	if !config.DisableVNC {
 		runArgs = append(runArgs, "--vnc-experimental")
