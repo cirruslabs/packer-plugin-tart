@@ -27,6 +27,7 @@ type Config struct {
 	VMName                string              `mapstructure:"vm_name" required:"true"`
 	VMBaseName            string              `mapstructure:"vm_base_name" required:"true"`
 	Recovery              bool                `mapstructure:"recovery" required:"false"`
+	Rosetta               string              `mapstructure:"rosetta" required:"false"`
 	CpuCount              uint8               `mapstructure:"cpu_count" required:"false"`
 	MemoryGb              uint16              `mapstructure:"memory_gb" required:"false"`
 	Display               string              `mapstructure:"display" required:"false"`
