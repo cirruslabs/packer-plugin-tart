@@ -47,6 +47,5 @@ func (a *TartVMArtifact) Destroy() error {
 }
 
 func (a *TartVMArtifact) vmDirPath() string {
-	home, _ := os.UserHomeDir()
-	return path.Join(home, ".tart", "vms", a.VMName)
+	return PathInTartHome("vms", a.VMName)
 }
