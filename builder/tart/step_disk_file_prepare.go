@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"os"
-	"path"
 )
 
 type stepDiskFilePrepare struct {
@@ -21,17 +20,10 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 
 	ui.Say("Inspecting machine disk image...")
 
-	homeDir, err := os.UserHomeDir()
-
-	if err != nil {
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-
-	diskImagePath := path.Join(homeDir, ".tart", "vms", config.VMName, "disk.img")
+	diskImagePath := PathInTartHome("vms", config.VMName, "disk.img")
 
 	if config.DiskSizeGb > 0 {
-		err = growDisk(config.DiskSizeGb, diskImagePath)
+		err := growDisk(config.DiskSizeGb, diskImagePath)
 
 		if err != nil {
 			ui.Error(err.Error())

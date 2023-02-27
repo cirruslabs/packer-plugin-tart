@@ -4,9 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"path"
 	"strings"
 )
+
+func PathInTartHome(elem ...string) string {
+	if home := os.Getenv("TART_HOME"); home != "" {
+		return path.Join(home, path.Join(elem...))
+	}
+	userHome, _ := os.UserHomeDir()
+	return path.Join(userHome, ".tart", path.Join(elem...))
+}
 
 func TartExec(args ...string) (string, error) {
 	var out bytes.Buffer
