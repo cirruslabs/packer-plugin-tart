@@ -4,11 +4,11 @@ go 1.19
 
 require (
 	github.com/diskfs/go-diskfs v1.3.0
-	github.com/hashicorp/hcl/v2 v2.16.1
+	github.com/hashicorp/hcl/v2 v2.14.1
 	github.com/hashicorp/packer-plugin-sdk v0.3.4
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/stretchr/testify v1.8.2
-	github.com/zclconf/go-cty v1.13.0
+	github.com/zclconf/go-cty v1.10.0
 	howett.net/plist v1.0.0
 )
 
