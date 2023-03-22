@@ -3,7 +3,9 @@ package tart
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"github.com/apparentlymart/go-cidr/cidr"
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
@@ -15,10 +17,17 @@ import (
 	"time"
 )
 
+var ErrFailedToDetectHostIP = errors.New("failed to detect host IP")
+
 var vncRegexp = regexp.MustCompile("vnc://.*:(.*)@(.*):([0-9]{1,5})")
 
 type stepRun struct {
 	vmName string
+}
+
+type bootCommandTemplateData struct {
+	HTTPIP   string
+	HTTPPort int
 }
 
 func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -117,6 +126,29 @@ func typeBootCommandOverVNC(
 	ui packersdk.Ui,
 	tartRunStdout *bytes.Buffer,
 ) bool {
+	if config.HTTPDir != "" || len(config.HTTPContent) != 0 {
+		ui.Say("Detecting host IP...")
+
+		hostIP, err := detectHostIP(config)
+		if err != nil {
+			err := fmt.Errorf("Failed to detect the host IP address: %v", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+
+			return false
+		}
+
+		ui.Say(fmt.Sprintf("Host IP is assumed to be %s", hostIP))
+
+		// Should be already filled by the Packer's commonsteps.StepHTTPServer
+		httpPort := state.Get("http_port").(int)
+
+		config.ctx.Data = &bootCommandTemplateData{
+			HTTPIP:   hostIP,
+			HTTPPort: httpPort,
+		}
+	}
+
 	ui.Say("Waiting for the VNC server credentials from Tart...")
 
 	var vncPassword string
@@ -195,4 +227,52 @@ func typeBootCommandOverVNC(
 	}
 
 	return true
+}
+
+func detectHostIP(config *Config) (string, error) {
+	if config.HTTPAddress != "" {
+		return config.HTTPAddress, nil
+	}
+
+	vmIPRaw, err := TartExec("ip", "--wait", "120", config.VMName)
+	if err != nil {
+		return "", fmt.Errorf("%w: while running \"tart ip\": %v",
+			ErrFailedToDetectHostIP, err)
+	}
+	vmIP := net.ParseIP(vmIPRaw)
+
+	// Find the interface that has this IP
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", fmt.Errorf("%w: while retrieving interfaces: %v",
+			ErrFailedToDetectHostIP, err)
+	}
+
+	for _, iface := range interfaces {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", fmt.Errorf("%w: while retrieving interface addresses: %v",
+				ErrFailedToDetectHostIP, err)
+		}
+
+		for _, addr := range addrs {
+			_, net, err := net.ParseCIDR(addr.String())
+			if err != nil {
+				return "", fmt.Errorf("%w: while parsing interface CIDR: %v",
+					ErrFailedToDetectHostIP, err)
+			}
+
+			if net.Contains(vmIP) {
+				gatewayIP, err := cidr.Host(net, 1)
+				if err != nil {
+					return "", fmt.Errorf("%w: while calculating gateway IP: %v",
+						ErrFailedToDetectHostIP, err)
+				}
+
+				return gatewayIP.String(), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("%w: no suitable interface found", ErrFailedToDetectHostIP)
 }
