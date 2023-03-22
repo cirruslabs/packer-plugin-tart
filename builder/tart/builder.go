@@ -20,21 +20,22 @@ import (
 const BuilderId = "tart.builder"
 
 type Config struct {
-	common.PackerConfig   `mapstructure:",squash"`
-	bootcommand.VNCConfig `mapstructure:",squash"`
-	FromIPSW              string              `mapstructure:"from_ipsw" required:"true"`
-	FromISO               []string            `mapstructure:"from_iso" required:"true"`
-	VMName                string              `mapstructure:"vm_name" required:"true"`
-	VMBaseName            string              `mapstructure:"vm_base_name" required:"true"`
-	Recovery              bool                `mapstructure:"recovery" required:"false"`
-	Rosetta               string              `mapstructure:"rosetta" required:"false"`
-	CpuCount              uint8               `mapstructure:"cpu_count" required:"false"`
-	MemoryGb              uint16              `mapstructure:"memory_gb" required:"false"`
-	Display               string              `mapstructure:"display" required:"false"`
-	DiskSizeGb            uint16              `mapstructure:"disk_size_gb" required:"false"`
-	Headless              bool                `mapstructure:"headless" required:"false"`
-	CreateGraceTime       time.Duration       `mapstructure:"create_grace_time" required:"false"`
-	Comm                  communicator.Config `mapstructure:",squash"`
+	common.PackerConfig    `mapstructure:",squash"`
+	bootcommand.VNCConfig  `mapstructure:",squash"`
+	commonsteps.HTTPConfig `mapstructure:",squash"`
+	FromIPSW               string              `mapstructure:"from_ipsw" required:"true"`
+	FromISO                []string            `mapstructure:"from_iso" required:"true"`
+	VMName                 string              `mapstructure:"vm_name" required:"true"`
+	VMBaseName             string              `mapstructure:"vm_base_name" required:"true"`
+	Recovery               bool                `mapstructure:"recovery" required:"false"`
+	Rosetta                string              `mapstructure:"rosetta" required:"false"`
+	CpuCount               uint8               `mapstructure:"cpu_count" required:"false"`
+	MemoryGb               uint16              `mapstructure:"memory_gb" required:"false"`
+	Display                string              `mapstructure:"display" required:"false"`
+	DiskSizeGb             uint16              `mapstructure:"disk_size_gb" required:"false"`
+	Headless               bool                `mapstructure:"headless" required:"false"`
+	CreateGraceTime        time.Duration       `mapstructure:"create_grace_time" required:"false"`
+	Comm                   communicator.Config `mapstructure:",squash"`
 
 	ctx interpolate.Context
 }
@@ -50,6 +51,9 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 	err = config.Decode(&b.config, &config.DecodeOpts{
 		PluginType:  "packer.builder.tart",
 		Interpolate: true,
+		InterpolateFilter: &interpolate.RenderFilter{
+			Exclude: []string{"boot_command"},
+		},
 	}, raws...)
 	if err != nil {
 		return nil, nil, err
@@ -68,6 +72,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		steps = append(steps, new(stepCreateLinuxVM))
 	} else if b.config.VMBaseName != "" {
 		steps = append(steps, new(stepCloneVM))
+	}
+
+	if b.config.HTTPDir != "" || len(b.config.HTTPContent) != 0 {
+		steps = append(steps, commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig))
 	}
 
 	steps = append(steps,

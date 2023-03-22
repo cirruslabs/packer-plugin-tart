@@ -3,6 +3,7 @@ module packer-plugin-tart
 go 1.19
 
 require (
+	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/diskfs/go-diskfs v1.3.0
 	github.com/hashicorp/hcl/v2 v2.14.1
 	github.com/hashicorp/packer-plugin-sdk v0.3.4
