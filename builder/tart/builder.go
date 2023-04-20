@@ -34,6 +34,7 @@ type Config struct {
 	Display                string              `mapstructure:"display" required:"false"`
 	DiskSizeGb             uint16              `mapstructure:"disk_size_gb" required:"false"`
 	Headless               bool                `mapstructure:"headless" required:"false"`
+	RunExtraArgs           []string            `mapstructure:"run_extra_args" required:"false"`
 	CreateGraceTime        time.Duration       `mapstructure:"create_grace_time" required:"false"`
 	Comm                   communicator.Config `mapstructure:",squash"`
 

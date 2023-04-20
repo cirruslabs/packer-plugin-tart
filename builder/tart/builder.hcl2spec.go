@@ -40,6 +40,7 @@ type FlatConfig struct {
 	Display                   *string           `mapstructure:"display" required:"false" cty:"display" hcl:"display"`
 	DiskSizeGb                *uint16           `mapstructure:"disk_size_gb" required:"false" cty:"disk_size_gb" hcl:"disk_size_gb"`
 	Headless                  *bool             `mapstructure:"headless" required:"false" cty:"headless" hcl:"headless"`
+	RunExtraArgs              []string          `mapstructure:"run_extra_args" required:"false" cty:"run_extra_args" hcl:"run_extra_args"`
 	CreateGraceTime           *string           `mapstructure:"create_grace_time" required:"false" cty:"create_grace_time" hcl:"create_grace_time"`
 	Type                      *string           `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
 	PauseBeforeConnect        *string           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
@@ -134,6 +135,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"display":                      &hcldec.AttrSpec{Name: "display", Type: cty.String, Required: false},
 		"disk_size_gb":                 &hcldec.AttrSpec{Name: "disk_size_gb", Type: cty.Number, Required: false},
 		"headless":                     &hcldec.AttrSpec{Name: "headless", Type: cty.Bool, Required: false},
+		"run_extra_args":               &hcldec.AttrSpec{Name: "run_extra_args", Type: cty.List(cty.String), Required: false},
 		"create_grace_time":            &hcldec.AttrSpec{Name: "create_grace_time", Type: cty.String, Required: false},
 		"communicator":                 &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":      &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},
