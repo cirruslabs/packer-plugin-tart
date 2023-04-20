@@ -47,6 +47,7 @@ Below we'll go through available options of this Packer plugin
 - `headless` (boolean) - Whether to show graphics interface of a VM. Useful for debugging `boot_command`.
 - `rosetta` (string) - Whether to enable Rosetta support of a Linux guest VM. Useful for running non arm64 programs in the guest VM. A common used value is `rosetta`. For further details and explanation run `tart run --help`
 - `boot_command` (array of strings) - This is an array of commands to type when the virtual machine is first booted. The goal of these commands should be to type just enough to initialize the operating system installer.
+- `run_extra_args` (array of strings) - Extra arguments to pass to `tart run` command. For example, pass a bridged network via `--net-bridged=en0`.
 
 ### Example Usage
 

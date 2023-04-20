@@ -50,6 +50,9 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	if config.Rosetta != "" {
 		runArgs = append(runArgs, fmt.Sprintf("--rosetta=%s", config.Rosetta))
 	}
+	if len(config.RunExtraArgs) > 0 {
+		runArgs = append(runArgs, config.RunExtraArgs...)
+	}
 	cmd := exec.Command("tart", runArgs...)
 	stdout := bytes.NewBufferString("")
 	cmd.Stdout = stdout
