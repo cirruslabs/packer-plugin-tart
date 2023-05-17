@@ -233,7 +233,7 @@ func typeBootCommandOverVNC(
 }
 
 func detectHostIP(config *Config) (string, error) {
-	if config.HTTPAddress != "" {
+	if config.HTTPAddress != "0.0.0.0" {
 		return config.HTTPAddress, nil
 	}
 

@@ -75,6 +75,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		steps = append(steps, new(stepCloneVM))
 	}
 
+	if errs := b.config.HTTPConfig.Prepare(interpolate.NewContext()); len(errs) != 0 {
+		return nil, errs[0]
+	}
 	if b.config.HTTPDir != "" || len(b.config.HTTPContent) != 0 {
 		steps = append(steps, commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig))
 	}
