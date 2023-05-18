@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"packer-plugin-tart/builder/tart/tartcmd"
 )
 
 type stepCloneVM struct{}
@@ -15,7 +16,7 @@ func (s *stepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 
 	ui.Say("Cloning virtual machine...")
 
-	if _, err := TartExec("clone", config.VMBaseName, config.VMName); err != nil {
+	if _, err := tartcmd.Sync(ctx, "clone", config.VMBaseName, config.VMName); err != nil {
 		err := fmt.Errorf("Error cloning VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())

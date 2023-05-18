@@ -1,12 +1,11 @@
 package tart
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"os/exec"
+	"packer-plugin-tart/builder/tart/tartcmd"
 	"strconv"
 	"time"
 )
@@ -29,7 +28,7 @@ func (s *stepCreateLinuxVM) Run(ctx context.Context, state multistep.StateBag) m
 
 	createArguments = append(createArguments, config.VMName)
 
-	if _, err := TartExec(createArguments...); err != nil {
+	if _, err := tartcmd.Sync(ctx, createArguments...); err != nil {
 		err := fmt.Errorf("Failed to create a VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
@@ -37,7 +36,7 @@ func (s *stepCreateLinuxVM) Run(ctx context.Context, state multistep.StateBag) m
 		return multistep.ActionHalt
 	}
 
-	if s.RunInstaller(ctx, state) != multistep.ActionContinue {
+	if runInstaller(ctx, state) != multistep.ActionContinue {
 		return multistep.ActionHalt
 	}
 
@@ -55,7 +54,7 @@ func (s *stepCreateLinuxVM) Cleanup(state multistep.StateBag) {
 	// nothing to clean up
 }
 
-func (s *stepCreateLinuxVM) RunInstaller(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func runInstaller(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 
@@ -75,34 +74,31 @@ func (s *stepCreateLinuxVM) RunInstaller(ctx context.Context, state multistep.St
 	for _, iso := range config.FromISO {
 		runArgs = append(runArgs, fmt.Sprintf("--disk=%s:ro", iso))
 	}
-	cmd := exec.Command("tart", runArgs...)
-	stdout := bytes.NewBufferString("")
-	cmd.Stdout = stdout
-	cmd.Stderr = uiWriter{ui: ui}
 
 	// Prevent the Tart from opening the Screen Sharing
 	// window connected to the VNC server we're starting
+	var env []string
 	if !config.DisableVNC {
-		cmd.Env = cmd.Environ()
-		cmd.Env = append(cmd.Env, "CI=true")
+		env = append(env, "CI=true")
 	}
 
-	if err := cmd.Start(); err != nil {
-		err = fmt.Errorf("Error starting VM: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-
-	defer func() {
-		ui.Say("Waiting for the install process to shutdown the VM...")
-		_, _ = cmd.Process.Wait()
-	}()
+	tartCmdHandle := tartcmd.Async(ctx, runArgs, env)
 
 	if !config.DisableVNC {
-		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout) {
+		if !typeBootCommandOverVNC(tartCmdHandle.Ctx(), state, config, ui, tartCmdHandle) {
 			return multistep.ActionHalt
 		}
+	}
+
+	ui.Say("Waiting for the \"tart run\" installation process to shutdown the VM...")
+
+	<-tartCmdHandle.Ctx().Done()
+
+	if err := tartCmdHandle.Err(); err != nil {
+		ui.Error(err.Error())
+		state.Put("error", err)
+
+		return multistep.ActionHalt
 	}
 
 	return multistep.ActionContinue

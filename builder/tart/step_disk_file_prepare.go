@@ -39,10 +39,11 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	}
 
 	ui.Say("Getting partition table...")
-	partitionTable, err := disk.GetPartitionTable()
 
+	partitionTable, err := disk.GetPartitionTable()
 	if err != nil {
 		ui.Error(err.Error())
+
 		return multistep.ActionHalt
 	}
 

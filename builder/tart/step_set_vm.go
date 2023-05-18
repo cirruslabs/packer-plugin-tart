@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"packer-plugin-tart/builder/tart/tartcmd"
 	"strconv"
 )
 
@@ -32,7 +33,7 @@ func (s *stepSetVM) Run(ctx context.Context, state multistep.StateBag) multistep
 		setArguments = append(setArguments, "--display", config.Display)
 	}
 
-	if _, err := TartExec(setArguments...); err != nil {
+	if _, err := tartcmd.Sync(ctx, setArguments...); err != nil {
 		err := fmt.Errorf("Error updating VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())

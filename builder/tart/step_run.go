@@ -1,7 +1,6 @@
 package tart
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -12,7 +11,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/mitchellh/go-vnc"
 	"net"
-	"os/exec"
+	"packer-plugin-tart/builder/tart/tartcmd"
 	"regexp"
 	"time"
 )
@@ -51,29 +50,19 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	if len(config.RunExtraArgs) > 0 {
 		runArgs = append(runArgs, config.RunExtraArgs...)
 	}
-	cmd := exec.Command("tart", runArgs...)
-	stdout := bytes.NewBufferString("")
-	cmd.Stdout = stdout
-	cmd.Stderr = uiWriter{ui: ui}
 
 	// Prevent the Tart from opening the Screen Sharing
 	// window connected to the VNC server we're starting
+	var env []string
 	if !config.DisableVNC {
-		cmd.Env = cmd.Environ()
-		cmd.Env = append(cmd.Env, "CI=true")
+		env = append(env, "CI=true")
 	}
 
-	if err := cmd.Start(); err != nil {
-		err = fmt.Errorf("Error starting VM: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-
-	state.Put("tart-cmd", cmd)
+	tartCmdHandle := tartcmd.Async(ctx, runArgs, env)
+	tartcmd.SetHandle(state, tartCmdHandle)
 
 	if (len(config.FromISO) == 0) && !config.DisableVNC {
-		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout) {
+		if !typeBootCommandOverVNC(tartCmdHandle.Ctx(), state, config, ui, tartCmdHandle) {
 			return multistep.ActionHalt
 		}
 	}
@@ -81,15 +70,6 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	ui.Say("Successfully started the virtual machine...")
 
 	return multistep.ActionContinue
-}
-
-type uiWriter struct {
-	ui packersdk.Ui
-}
-
-func (u uiWriter) Write(p []byte) (n int, err error) {
-	u.ui.Say(string(p))
-	return len(p), nil
 }
 
 // Cleanup stops the VM.
@@ -112,11 +92,15 @@ func (s *stepRun) Cleanup(state multistep.StateBag) {
 		}
 	}
 
-	cmd := state.Get("tart-cmd").(*exec.Cmd)
+	if tartCmdHandle := tartcmd.GetHandle(state); tartCmdHandle != nil {
+		ui.Say("Waiting for the \"tart run\" process to exit...")
 
-	if cmd != nil {
-		ui.Say("Waiting for the tart process to exit...")
-		_, _ = cmd.Process.Wait()
+		<-tartCmdHandle.Ctx().Done()
+
+		if err := tartCmdHandle.Err(); err != nil {
+			ui.Error(err.Error())
+			state.Put("error", err)
+		}
 	}
 }
 
@@ -125,12 +109,12 @@ func typeBootCommandOverVNC(
 	state multistep.StateBag,
 	config *Config,
 	ui packersdk.Ui,
-	tartRunStdout *bytes.Buffer,
+	tartCmdHandle *tartcmd.Handle,
 ) bool {
 	if config.HTTPDir != "" || len(config.HTTPContent) != 0 {
 		ui.Say("Detecting host IP...")
 
-		hostIP, err := detectHostIP(config)
+		hostIP, err := detectHostIP(ctx, config)
 		if err != nil {
 			err := fmt.Errorf("Failed to detect the host IP address: %v", err)
 			state.Put("error", err)
@@ -157,7 +141,7 @@ func typeBootCommandOverVNC(
 	var vncPort string
 
 	for {
-		matches := vncRegexp.FindStringSubmatch(tartRunStdout.String())
+		matches := vncRegexp.FindStringSubmatch(tartCmdHandle.Stdout())
 		if len(matches) == 1+vncRegexp.NumSubexp() {
 			vncPassword = matches[1]
 			vncHost = matches[2]
@@ -166,12 +150,25 @@ func typeBootCommandOverVNC(
 			break
 		}
 
-		time.Sleep(time.Second)
+		select {
+		case <-ctx.Done():
+			err := tartCmdHandle.Err()
+			if err == nil {
+				err = fmt.Errorf("premature exit")
+			}
+			ui.Error(err.Error())
+			state.Put("error", err)
+
+			return false
+		case <-time.After(time.Second):
+			// continue
+		}
 	}
 
 	ui.Say("Retrieved VNC credentials, connecting...")
 
-	netConn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", vncHost, vncPort))
+	dialer := net.Dialer{}
+	netConn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%s", vncHost, vncPort))
 	if err != nil {
 		err := fmt.Errorf("Failed to connect to the Tart's VNC server: %s", err)
 		state.Put("error", err)
@@ -230,12 +227,12 @@ func typeBootCommandOverVNC(
 	return true
 }
 
-func detectHostIP(config *Config) (string, error) {
+func detectHostIP(ctx context.Context, config *Config) (string, error) {
 	if config.HTTPAddress != "0.0.0.0" {
 		return config.HTTPAddress, nil
 	}
 
-	vmIPRaw, err := TartExec("ip", "--wait", "120", config.VMName)
+	vmIPRaw, err := tartcmd.Sync(ctx, "ip", "--wait", "120", config.VMName)
 	if err != nil {
 		return "", fmt.Errorf("%w: while running \"tart ip\": %v",
 			ErrFailedToDetectHostIP, err)
