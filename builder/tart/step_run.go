@@ -88,7 +88,7 @@ type uiWriter struct {
 }
 
 func (u uiWriter) Write(p []byte) (n int, err error) {
-	u.ui.Say(string(p))
+	u.ui.Error(string(p))
 	return len(p), nil
 }
 
