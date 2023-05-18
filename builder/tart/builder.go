@@ -59,8 +59,11 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 	if err != nil {
 		return nil, nil, err
 	}
-	var errs *packer.MultiError
-	errs = packer.MultiErrorAppend(errs, b.config.Comm.Prepare(&b.config.ctx)...)
+
+	if errs := b.config.Comm.Prepare(&b.config.ctx); len(errs) != 0 {
+		return nil, nil, packer.MultiErrorAppend(nil, errs...)
+	}
+
 	return nil, nil, nil
 }
 

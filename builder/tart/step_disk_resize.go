@@ -9,9 +9,7 @@ import (
 	"strings"
 )
 
-type stepResize struct {
-	vmName string
-}
+type stepResize struct{}
 
 func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)

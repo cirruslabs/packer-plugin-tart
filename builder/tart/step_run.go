@@ -21,9 +21,7 @@ var ErrFailedToDetectHostIP = errors.New("failed to detect host IP")
 
 var vncRegexp = regexp.MustCompile("vnc://.*:(.*)@(.*):([0-9]{1,5})")
 
-type stepRun struct {
-	vmName string
-}
+type stepRun struct{}
 
 type bootCommandTemplateData struct {
 	HTTPIP   string
