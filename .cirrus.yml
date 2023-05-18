@@ -1,0 +1,8 @@
+task:
+  name: Build
+
+  container:
+    image: golang:latest
+
+  script:
+    - make build
