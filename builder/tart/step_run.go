@@ -14,6 +14,7 @@ import (
 	"net"
 	"os/exec"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -88,7 +89,7 @@ type uiWriter struct {
 }
 
 func (u uiWriter) Write(p []byte) (n int, err error) {
-	u.ui.Error(string(p))
+	u.ui.Error(strings.TrimSpace(string(p)))
 	return len(p), nil
 }
 
