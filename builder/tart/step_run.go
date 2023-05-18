@@ -153,6 +153,9 @@ func typeBootCommandOverVNC(
 
 	ui.Say("Waiting for the VNC server credentials from Tart...")
 
+	vncCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
 	var vncPassword string
 	var vncHost string
 	var vncPort string
@@ -168,7 +171,7 @@ func typeBootCommandOverVNC(
 		}
 
 		select {
-		case <-ctx.Done():
+		case <-vncCtx.Done():
 			return false
 		case <-time.After(time.Second):
 			// continue
