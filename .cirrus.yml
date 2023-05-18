@@ -1,8 +1,20 @@
 task:
+  name: Lint
+
+  container:
+    image: golangci/golangci-lint:latest
+
+  script: golangci-lint run -v --timeout 4m0s --out-format json > golangci.json
+
+  always:
+    report_artifacts:
+      path: golangci.json
+      format: golangci
+
+task:
   name: Build
 
   container:
     image: golang:latest
 
-  script:
-    - make build
+  script: make build
