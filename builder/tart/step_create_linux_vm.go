@@ -75,7 +75,7 @@ func runInstaller(ctx context.Context, state multistep.StateBag) multistep.StepA
 	for _, iso := range config.FromISO {
 		runArgs = append(runArgs, fmt.Sprintf("--disk=%s:ro", iso))
 	}
-	cmd := exec.CommandContext(ctx, "tart", runArgs...)
+	cmd := exec.CommandContext(ctx, tartCommand, runArgs...)
 	stdout := bytes.NewBufferString("")
 	cmd.Stdout = stdout
 	cmd.Stderr = uiWriter{ui: ui}
