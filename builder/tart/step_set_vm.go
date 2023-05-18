@@ -32,7 +32,7 @@ func (s *stepSetVM) Run(ctx context.Context, state multistep.StateBag) multistep
 		setArguments = append(setArguments, "--display", config.Display)
 	}
 
-	if _, err := TartExec(setArguments...); err != nil {
+	if _, err := TartExec(ctx, setArguments...); err != nil {
 		err := fmt.Errorf("Error updating VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())

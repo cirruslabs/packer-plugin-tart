@@ -51,7 +51,7 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	if len(config.RunExtraArgs) > 0 {
 		runArgs = append(runArgs, config.RunExtraArgs...)
 	}
-	cmd := exec.Command("tart", runArgs...)
+	cmd := exec.CommandContext(ctx, "tart", runArgs...)
 	stdout := bytes.NewBufferString("")
 	cmd.Stdout = stdout
 	cmd.Stderr = uiWriter{ui: ui}
@@ -130,7 +130,7 @@ func typeBootCommandOverVNC(
 	if config.HTTPDir != "" || len(config.HTTPContent) != 0 {
 		ui.Say("Detecting host IP...")
 
-		hostIP, err := detectHostIP(config)
+		hostIP, err := detectHostIP(ctx, config)
 		if err != nil {
 			err := fmt.Errorf("Failed to detect the host IP address: %v", err)
 			state.Put("error", err)
@@ -171,7 +171,8 @@ func typeBootCommandOverVNC(
 
 	ui.Say("Retrieved VNC credentials, connecting...")
 
-	netConn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", vncHost, vncPort))
+	dialer := net.Dialer{}
+	netConn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%s", vncHost, vncPort))
 	if err != nil {
 		err := fmt.Errorf("Failed to connect to the Tart's VNC server: %s", err)
 		state.Put("error", err)
@@ -230,12 +231,12 @@ func typeBootCommandOverVNC(
 	return true
 }
 
-func detectHostIP(config *Config) (string, error) {
+func detectHostIP(ctx context.Context, config *Config) (string, error) {
 	if config.HTTPAddress != "0.0.0.0" {
 		return config.HTTPAddress, nil
 	}
 
-	vmIPRaw, err := TartExec("ip", "--wait", "120", config.VMName)
+	vmIPRaw, err := TartExec(ctx, "ip", "--wait", "120", config.VMName)
 	if err != nil {
 		return "", fmt.Errorf("%w: while running \"tart ip\": %v",
 			ErrFailedToDetectHostIP, err)

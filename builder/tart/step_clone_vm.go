@@ -15,7 +15,7 @@ func (s *stepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 
 	ui.Say("Cloning virtual machine...")
 
-	if _, err := TartExec("clone", config.VMBaseName, config.VMName); err != nil {
+	if _, err := TartExec(ctx, "clone", config.VMBaseName, config.VMName); err != nil {
 		err := fmt.Errorf("Error cloning VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
