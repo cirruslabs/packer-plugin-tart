@@ -8,5 +8,5 @@ packer {
 }
 
 build {
-  sources = ["source.tart.example"]
+  sources = ["source.tart-cli.example"]
 }

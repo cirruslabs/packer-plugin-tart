@@ -2,6 +2,7 @@ package tart
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -9,6 +10,8 @@ import (
 	"path"
 	"strings"
 )
+
+const tartCommand = "tart"
 
 func PathInTartHome(elem ...string) string {
 	if home := os.Getenv("TART_HOME"); home != "" {
@@ -18,11 +21,11 @@ func PathInTartHome(elem ...string) string {
 	return path.Join(userHome, ".tart", path.Join(elem...))
 }
 
-func TartExec(args ...string) (string, error) {
+func TartExec(ctx context.Context, args ...string) (string, error) {
 	var out bytes.Buffer
 
 	log.Printf("Executing tart: %#v", args)
-	cmd := exec.Command("tart", args...)
+	cmd := exec.CommandContext(ctx, tartCommand, args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	err := cmd.Run()

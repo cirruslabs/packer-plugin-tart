@@ -27,7 +27,7 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 
 	createArguments = append(createArguments, config.VMName)
 
-	if _, err := TartExec(createArguments...); err != nil {
+	if _, err := TartExec(ctx, createArguments...); err != nil {
 		err := fmt.Errorf("Failed to create a VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())

@@ -5,5 +5,5 @@ dist/*
 packer-plugin-tart
 .docs/*
 
-example/*.iso
-example/cidata/*
+example/linux/*.iso
+example/linux/cidata/*

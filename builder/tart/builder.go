@@ -96,7 +96,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		steps = append(steps,
 			&communicator.StepConnect{
 				Config:    &b.config.Comm,
-				Host:      TartMachineIP(b.config.VMName),
+				Host:      TartMachineIP(ctx, b.config.VMName),
 				SSHConfig: b.config.Comm.SSHConfigFunc(),
 			},
 			new(stepResize),

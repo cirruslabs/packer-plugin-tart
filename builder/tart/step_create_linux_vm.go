@@ -29,7 +29,7 @@ func (s *stepCreateLinuxVM) Run(ctx context.Context, state multistep.StateBag) m
 
 	createArguments = append(createArguments, config.VMName)
 
-	if _, err := TartExec(createArguments...); err != nil {
+	if _, err := TartExec(ctx, createArguments...); err != nil {
 		err := fmt.Errorf("Failed to create a VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
@@ -37,7 +37,7 @@ func (s *stepCreateLinuxVM) Run(ctx context.Context, state multistep.StateBag) m
 		return multistep.ActionHalt
 	}
 
-	if s.RunInstaller(ctx, state) != multistep.ActionContinue {
+	if runInstaller(ctx, state) != multistep.ActionContinue {
 		return multistep.ActionHalt
 	}
 
@@ -55,7 +55,7 @@ func (s *stepCreateLinuxVM) Cleanup(state multistep.StateBag) {
 	// nothing to clean up
 }
 
-func (s *stepCreateLinuxVM) RunInstaller(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func runInstaller(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 
@@ -75,7 +75,7 @@ func (s *stepCreateLinuxVM) RunInstaller(ctx context.Context, state multistep.St
 	for _, iso := range config.FromISO {
 		runArgs = append(runArgs, fmt.Sprintf("--disk=%s:ro", iso))
 	}
-	cmd := exec.Command("tart", runArgs...)
+	cmd := exec.CommandContext(ctx, tartCommand, runArgs...)
 	stdout := bytes.NewBufferString("")
 	cmd.Stdout = stdout
 	cmd.Stderr = uiWriter{ui: ui}
