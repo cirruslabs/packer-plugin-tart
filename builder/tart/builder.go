@@ -67,19 +67,20 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
 	steps := []multistep.Step{}
 
+	if b.config.HTTPDir != "" || len(b.config.HTTPContent) != 0 {
+		if errs := b.config.HTTPConfig.Prepare(interpolate.NewContext()); len(errs) != 0 {
+			return nil, errs[0]
+		}
+
+		steps = append(steps, commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig))
+	}
+
 	if b.config.FromIPSW != "" {
 		steps = append(steps, new(stepCreateVM))
 	} else if len(b.config.FromISO) > 0 {
 		steps = append(steps, new(stepCreateLinuxVM))
 	} else if b.config.VMBaseName != "" {
 		steps = append(steps, new(stepCloneVM))
-	}
-
-	if errs := b.config.HTTPConfig.Prepare(interpolate.NewContext()); len(errs) != 0 {
-		return nil, errs[0]
-	}
-	if b.config.HTTPDir != "" || len(b.config.HTTPContent) != 0 {
-		steps = append(steps, commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig))
 	}
 
 	steps = append(steps,
