@@ -166,7 +166,12 @@ func typeBootCommandOverVNC(
 			break
 		}
 
-		time.Sleep(time.Second)
+		select {
+		case <-ctx.Done():
+			return false
+		case <-time.After(time.Second):
+			// continue
+		}
 	}
 
 	ui.Say("Retrieved VNC credentials, connecting...")
