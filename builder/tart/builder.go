@@ -59,13 +59,24 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 	if err != nil {
 		return nil, nil, err
 	}
-	var errs *packer.MultiError
-	errs = packer.MultiErrorAppend(errs, b.config.Comm.Prepare(&b.config.ctx)...)
+
+	if errs := b.config.Comm.Prepare(&b.config.ctx); len(errs) != 0 {
+		return nil, nil, packer.MultiErrorAppend(nil, errs...)
+	}
+
 	return nil, nil, nil
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
 	steps := []multistep.Step{}
+
+	if b.config.HTTPDir != "" || len(b.config.HTTPContent) != 0 {
+		if errs := b.config.HTTPConfig.Prepare(interpolate.NewContext()); len(errs) != 0 {
+			return nil, packer.MultiErrorAppend(nil, errs...)
+		}
+
+		steps = append(steps, commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig))
+	}
 
 	if b.config.FromIPSW != "" {
 		steps = append(steps, new(stepCreateVM))
@@ -73,10 +84,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		steps = append(steps, new(stepCreateLinuxVM))
 	} else if b.config.VMBaseName != "" {
 		steps = append(steps, new(stepCloneVM))
-	}
-
-	if b.config.HTTPDir != "" || len(b.config.HTTPContent) != 0 {
-		steps = append(steps, commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig))
 	}
 
 	steps = append(steps,

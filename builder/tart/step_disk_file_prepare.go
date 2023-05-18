@@ -10,9 +10,7 @@ import (
 	"os"
 )
 
-type stepDiskFilePrepare struct {
-	vmName string
-}
+type stepDiskFilePrepare struct{}
 
 func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
