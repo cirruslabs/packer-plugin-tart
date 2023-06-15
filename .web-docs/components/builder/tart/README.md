@@ -1,0 +1,75 @@
+Type: `tart`
+
+The `tart` builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart virtualization](https://github.com/cirruslabs/tart).
+Here are some highlights of Tart:
+
+* Tart uses Apple's own `Virtualization.Framework` for [near-native performance](https://browser.geekbench.com/v5/cpu/compare/14966395?baseline=14966339).
+* Push/Pull virtual machines from any OCI-compatible container registry.
+* Built-in CI integration.
+* Use this Tart Packer Plugin to automate VM creation.
+
+## How to get started with Tart
+
+Here is how you can install Tart, pull a remote macOS virtual machine and run it:
+
+```bash
+brew install cirruslabs/cli/tart
+tart clone ghcr.io/cirruslabs/macos-ventura-vanilla:latest ventura-vanilla
+tart run ventura-vanilla
+```
+
+Below we'll go through available options of this Packer plugin
+
+<!-- Builder Configuration Fields -->
+
+### Required Configuration
+
+- `vm_name` (string) - The name of the VM to be created.
+
+### Optional Configuration
+
+- `vm_base_name` (string) - The name of the VM to be used for the initial cloning. Can be either a local VM or a remote VM that will be pulled from a registry.
+- `from_ipsw` (string) - Location of an IPSW file to initialize a macOS virtual machine from. Can be either an absolute path to a file on disk on file or an URL to a remote file.
+- `from_iso` (string) - Location of an ISO file to initialize a Linux virtual machine from. An absolute path to a file on disk.
+- `cpu_count` (int) - Amount of virtual CPUs for the new VM to use by default. Default value is inherited from the base VM.
+- `memory_gb` (int) - Amount of unified memory in GB for the new VM to use by default. Default value is inherited from the base VM.
+- `ssh_username` (string) - Username to use for the communication over SSH to run provision steps.
+- `ssh_password` (string) - Password to use for the communication over SSH to run provision steps.
+- `headless` (boolean) - Whether to show graphics interface of a VM. Useful for debugging `boot_command`.
+- `rosetta` (string) - Whether to enable Rosetta support of a Linux guest VM. Useful for running non arm64 programs in the guest VM. A common used value is `rosetta`. For further details and explanation run `tart run --help`
+- `boot_command` (array of strings) - This is an array of commands to type when the virtual machine is first booted. The goal of these commands should be to type just enough to initialize the operating system installer.
+- `run_extra_args` (array of strings) - Extra arguments to pass to `tart run` command. For example, pass a bridged network via `--net-bridged=en0`.
+
+### Example Usage
+
+Here is a basic example of creating a macOS virtual machine:
+
+```hcl
+variable "macos_version" {
+  type =  string
+  default = "ventura"
+}
+
+source "tart-cli" "tart" {
+  vm_base_name = "${var.macos_version}-vanilla"
+  vm_name      = "${var.macos_version}-base"
+  cpu_count    = 4
+  memory_gb    = 8
+  disk_size_gb = 50
+  ssh_username = "admin"
+  ssh_password = "admin"
+  ssh_timeout  = "120s"
+}
+
+build {
+  sources = ["source.tart-cli.tart"]
+
+  provisioner "shell" {
+    inline = ["echo 'Disabling spotlight indexing...'", "sudo mdutil -a -i off"]
+  }
+
+  # more provisioners
+}
+```
+
+For more advanced examples please referer to [this repository](https://github.com/cirruslabs/macos-image-templates).
