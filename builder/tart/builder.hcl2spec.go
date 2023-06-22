@@ -29,19 +29,6 @@ type FlatConfig struct {
 	HTTPPortMax               *int              `mapstructure:"http_port_max" cty:"http_port_max" hcl:"http_port_max"`
 	HTTPAddress               *string           `mapstructure:"http_bind_address" cty:"http_bind_address" hcl:"http_bind_address"`
 	HTTPInterface             *string           `mapstructure:"http_interface" undocumented:"true" cty:"http_interface" hcl:"http_interface"`
-	FromIPSW                  *string           `mapstructure:"from_ipsw" required:"true" cty:"from_ipsw" hcl:"from_ipsw"`
-	FromISO                   []string          `mapstructure:"from_iso" required:"true" cty:"from_iso" hcl:"from_iso"`
-	VMName                    *string           `mapstructure:"vm_name" required:"true" cty:"vm_name" hcl:"vm_name"`
-	VMBaseName                *string           `mapstructure:"vm_base_name" required:"true" cty:"vm_base_name" hcl:"vm_base_name"`
-	Recovery                  *bool             `mapstructure:"recovery" required:"false" cty:"recovery" hcl:"recovery"`
-	Rosetta                   *string           `mapstructure:"rosetta" required:"false" cty:"rosetta" hcl:"rosetta"`
-	CpuCount                  *uint8            `mapstructure:"cpu_count" required:"false" cty:"cpu_count" hcl:"cpu_count"`
-	MemoryGb                  *uint16           `mapstructure:"memory_gb" required:"false" cty:"memory_gb" hcl:"memory_gb"`
-	Display                   *string           `mapstructure:"display" required:"false" cty:"display" hcl:"display"`
-	DiskSizeGb                *uint16           `mapstructure:"disk_size_gb" required:"false" cty:"disk_size_gb" hcl:"disk_size_gb"`
-	Headless                  *bool             `mapstructure:"headless" required:"false" cty:"headless" hcl:"headless"`
-	RunExtraArgs              []string          `mapstructure:"run_extra_args" required:"false" cty:"run_extra_args" hcl:"run_extra_args"`
-	CreateGraceTime           *string           `mapstructure:"create_grace_time" required:"false" cty:"create_grace_time" hcl:"create_grace_time"`
 	Type                      *string           `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
 	PauseBeforeConnect        *string           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
 	SSHHost                   *string           `mapstructure:"ssh_host" cty:"ssh_host" hcl:"ssh_host"`
@@ -91,6 +78,19 @@ type FlatConfig struct {
 	WinRMUseSSL               *bool             `mapstructure:"winrm_use_ssl" cty:"winrm_use_ssl" hcl:"winrm_use_ssl"`
 	WinRMInsecure             *bool             `mapstructure:"winrm_insecure" cty:"winrm_insecure" hcl:"winrm_insecure"`
 	WinRMUseNTLM              *bool             `mapstructure:"winrm_use_ntlm" cty:"winrm_use_ntlm" hcl:"winrm_use_ntlm"`
+	FromIPSW                  *string           `mapstructure:"from_ipsw" cty:"from_ipsw" hcl:"from_ipsw"`
+	FromISO                   []string          `mapstructure:"from_iso" cty:"from_iso" hcl:"from_iso"`
+	VMBaseName                *string           `mapstructure:"vm_base_name" cty:"vm_base_name" hcl:"vm_base_name"`
+	VMName                    *string           `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
+	CpuCount                  *uint8            `mapstructure:"cpu_count" cty:"cpu_count" hcl:"cpu_count"`
+	CreateGraceTime           *string           `mapstructure:"create_grace_time" cty:"create_grace_time" hcl:"create_grace_time"`
+	DiskSizeGb                *uint16           `mapstructure:"disk_size_gb" cty:"disk_size_gb" hcl:"disk_size_gb"`
+	Display                   *string           `mapstructure:"display" cty:"display" hcl:"display"`
+	Headless                  *bool             `mapstructure:"headless" cty:"headless" hcl:"headless"`
+	MemoryGb                  *uint16           `mapstructure:"memory_gb" cty:"memory_gb" hcl:"memory_gb"`
+	Recovery                  *bool             `mapstructure:"recovery" cty:"recovery" hcl:"recovery"`
+	Rosetta                   *string           `mapstructure:"rosetta" cty:"rosetta" hcl:"rosetta"`
+	RunExtraArgs              []string          `mapstructure:"run_extra_args" cty:"run_extra_args" hcl:"run_extra_args"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -124,19 +124,6 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"http_port_max":                &hcldec.AttrSpec{Name: "http_port_max", Type: cty.Number, Required: false},
 		"http_bind_address":            &hcldec.AttrSpec{Name: "http_bind_address", Type: cty.String, Required: false},
 		"http_interface":               &hcldec.AttrSpec{Name: "http_interface", Type: cty.String, Required: false},
-		"from_ipsw":                    &hcldec.AttrSpec{Name: "from_ipsw", Type: cty.String, Required: false},
-		"from_iso":                     &hcldec.AttrSpec{Name: "from_iso", Type: cty.List(cty.String), Required: false},
-		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
-		"vm_base_name":                 &hcldec.AttrSpec{Name: "vm_base_name", Type: cty.String, Required: false},
-		"recovery":                     &hcldec.AttrSpec{Name: "recovery", Type: cty.Bool, Required: false},
-		"rosetta":                      &hcldec.AttrSpec{Name: "rosetta", Type: cty.String, Required: false},
-		"cpu_count":                    &hcldec.AttrSpec{Name: "cpu_count", Type: cty.Number, Required: false},
-		"memory_gb":                    &hcldec.AttrSpec{Name: "memory_gb", Type: cty.Number, Required: false},
-		"display":                      &hcldec.AttrSpec{Name: "display", Type: cty.String, Required: false},
-		"disk_size_gb":                 &hcldec.AttrSpec{Name: "disk_size_gb", Type: cty.Number, Required: false},
-		"headless":                     &hcldec.AttrSpec{Name: "headless", Type: cty.Bool, Required: false},
-		"run_extra_args":               &hcldec.AttrSpec{Name: "run_extra_args", Type: cty.List(cty.String), Required: false},
-		"create_grace_time":            &hcldec.AttrSpec{Name: "create_grace_time", Type: cty.String, Required: false},
 		"communicator":                 &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":      &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},
 		"ssh_host":                     &hcldec.AttrSpec{Name: "ssh_host", Type: cty.String, Required: false},
@@ -186,6 +173,19 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"winrm_use_ssl":                &hcldec.AttrSpec{Name: "winrm_use_ssl", Type: cty.Bool, Required: false},
 		"winrm_insecure":               &hcldec.AttrSpec{Name: "winrm_insecure", Type: cty.Bool, Required: false},
 		"winrm_use_ntlm":               &hcldec.AttrSpec{Name: "winrm_use_ntlm", Type: cty.Bool, Required: false},
+		"from_ipsw":                    &hcldec.AttrSpec{Name: "from_ipsw", Type: cty.String, Required: false},
+		"from_iso":                     &hcldec.AttrSpec{Name: "from_iso", Type: cty.List(cty.String), Required: false},
+		"vm_base_name":                 &hcldec.AttrSpec{Name: "vm_base_name", Type: cty.String, Required: false},
+		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
+		"cpu_count":                    &hcldec.AttrSpec{Name: "cpu_count", Type: cty.Number, Required: false},
+		"create_grace_time":            &hcldec.AttrSpec{Name: "create_grace_time", Type: cty.String, Required: false},
+		"disk_size_gb":                 &hcldec.AttrSpec{Name: "disk_size_gb", Type: cty.Number, Required: false},
+		"display":                      &hcldec.AttrSpec{Name: "display", Type: cty.String, Required: false},
+		"headless":                     &hcldec.AttrSpec{Name: "headless", Type: cty.Bool, Required: false},
+		"memory_gb":                    &hcldec.AttrSpec{Name: "memory_gb", Type: cty.Number, Required: false},
+		"recovery":                     &hcldec.AttrSpec{Name: "recovery", Type: cty.Bool, Required: false},
+		"rosetta":                      &hcldec.AttrSpec{Name: "rosetta", Type: cty.String, Required: false},
+		"run_extra_args":               &hcldec.AttrSpec{Name: "run_extra_args", Type: cty.List(cty.String), Required: false},
 	}
 	return s
 }

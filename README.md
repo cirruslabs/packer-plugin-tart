@@ -50,8 +50,7 @@ on [installing a plugin](https://www.packer.io/docs/extending/plugins/#installin
 ### Configuration
 
 For more information on how to configure the plugin, please read the
-documentation located in the [`docs/`](docs) directory.
-
+documentation located on the [HashiCorp's website](https://developer.hashicorp.com/packer/plugins/builders/tart).
 
 ## Contributing
 
