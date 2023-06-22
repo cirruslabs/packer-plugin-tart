@@ -23,20 +23,22 @@ type Config struct {
 	common.PackerConfig    `mapstructure:",squash"`
 	bootcommand.VNCConfig  `mapstructure:",squash"`
 	commonsteps.HTTPConfig `mapstructure:",squash"`
-	FromIPSW               string              `mapstructure:"from_ipsw" required:"true"`
-	FromISO                []string            `mapstructure:"from_iso" required:"true"`
-	VMName                 string              `mapstructure:"vm_name" required:"true"`
-	VMBaseName             string              `mapstructure:"vm_base_name" required:"true"`
-	Recovery               bool                `mapstructure:"recovery" required:"false"`
-	Rosetta                string              `mapstructure:"rosetta" required:"false"`
-	CpuCount               uint8               `mapstructure:"cpu_count" required:"false"`
-	MemoryGb               uint16              `mapstructure:"memory_gb" required:"false"`
-	Display                string              `mapstructure:"display" required:"false"`
-	DiskSizeGb             uint16              `mapstructure:"disk_size_gb" required:"false"`
-	Headless               bool                `mapstructure:"headless" required:"false"`
-	RunExtraArgs           []string            `mapstructure:"run_extra_args" required:"false"`
-	CreateGraceTime        time.Duration       `mapstructure:"create_grace_time" required:"false"`
-	Comm                   communicator.Config `mapstructure:",squash"`
+	CommunicatorConfig     communicator.Config `mapstructure:",squash"`
+
+	FromIPSW   string   `mapstructure:"from_ipsw"`
+	FromISO    []string `mapstructure:"from_iso"`
+	VMBaseName string   `mapstructure:"vm_base_name"`
+	VMName     string   `mapstructure:"vm_name"`
+
+	CpuCount        uint8         `mapstructure:"cpu_count"`
+	CreateGraceTime time.Duration `mapstructure:"create_grace_time"`
+	DiskSizeGb      uint16        `mapstructure:"disk_size_gb"`
+	Display         string        `mapstructure:"display"`
+	Headless        bool          `mapstructure:"headless"`
+	MemoryGb        uint16        `mapstructure:"memory_gb"`
+	Recovery        bool          `mapstructure:"recovery"`
+	Rosetta         string        `mapstructure:"rosetta"`
+	RunExtraArgs    []string      `mapstructure:"run_extra_args"`
 
 	ctx interpolate.Context
 }
@@ -60,7 +62,7 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 		return nil, nil, err
 	}
 
-	if errs := b.config.Comm.Prepare(&b.config.ctx); len(errs) != 0 {
+	if errs := b.config.CommunicatorConfig.Prepare(&b.config.ctx); len(errs) != 0 {
 		return nil, nil, packer.MultiErrorAppend(nil, errs...)
 	}
 
@@ -76,6 +78,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		}
 
 		steps = append(steps, commonsteps.HTTPServerFromHTTPConfig(&b.config.HTTPConfig))
+	}
+
+	if b.config.VMName == "" {
+		return nil, errors.New("\"vm_name\" is required")
 	}
 
 	if b.config.FromIPSW != "" {
@@ -95,9 +101,9 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	if !b.config.Recovery {
 		steps = append(steps,
 			&communicator.StepConnect{
-				Config:    &b.config.Comm,
+				Config:    &b.config.CommunicatorConfig,
 				Host:      TartMachineIP(ctx, b.config.VMName),
-				SSHConfig: b.config.Comm.SSHConfigFunc(),
+				SSHConfig: b.config.CommunicatorConfig.SSHConfigFunc(),
 			},
 			new(stepResize),
 			&commonsteps.StepProvision{},
