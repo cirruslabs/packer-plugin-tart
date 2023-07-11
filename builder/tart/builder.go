@@ -26,10 +26,11 @@ type Config struct {
 	commonsteps.HTTPConfig `mapstructure:",squash"`
 	CommunicatorConfig     communicator.Config `mapstructure:",squash"`
 
-	FromIPSW   string   `mapstructure:"from_ipsw"`
-	FromISO    []string `mapstructure:"from_iso"`
-	VMBaseName string   `mapstructure:"vm_base_name"`
-	VMName     string   `mapstructure:"vm_name"`
+	FromIPSW      string   `mapstructure:"from_ipsw"`
+	FromISO       []string `mapstructure:"from_iso"`
+	VMBaseName    string   `mapstructure:"vm_base_name"`
+	VMName        string   `mapstructure:"vm_name"`
+	AllowInsecure bool     `mapstructure:"allow_insecure"`
 
 	CpuCount        uint8         `mapstructure:"cpu_count"`
 	CreateGraceTime time.Duration `mapstructure:"create_grace_time"`
