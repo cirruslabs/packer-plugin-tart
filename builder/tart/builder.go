@@ -5,6 +5,8 @@ package tart
 import (
 	"context"
 	"errors"
+	"time"
+
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	"github.com/hashicorp/packer-plugin-sdk/common"
@@ -14,7 +16,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"time"
 )
 
 const BuilderId = "tart.builder"
@@ -25,10 +26,11 @@ type Config struct {
 	commonsteps.HTTPConfig `mapstructure:",squash"`
 	CommunicatorConfig     communicator.Config `mapstructure:",squash"`
 
-	FromIPSW   string   `mapstructure:"from_ipsw"`
-	FromISO    []string `mapstructure:"from_iso"`
-	VMBaseName string   `mapstructure:"vm_base_name"`
-	VMName     string   `mapstructure:"vm_name"`
+	FromIPSW      string   `mapstructure:"from_ipsw"`
+	FromISO       []string `mapstructure:"from_iso"`
+	VMBaseName    string   `mapstructure:"vm_base_name"`
+	VMName        string   `mapstructure:"vm_name"`
+	AllowInsecure bool     `mapstructure:"allow_insecure"`
 
 	CpuCount        uint8         `mapstructure:"cpu_count"`
 	CreateGraceTime time.Duration `mapstructure:"create_grace_time"`

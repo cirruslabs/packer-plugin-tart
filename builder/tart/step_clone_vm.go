@@ -3,6 +3,7 @@ package tart
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
@@ -15,7 +16,13 @@ func (s *stepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 
 	ui.Say("Cloning virtual machine...")
 
-	if _, err := TartExec(ctx, "clone", config.VMBaseName, config.VMName); err != nil {
+	cmdArgs := []string{"clone", config.VMBaseName, config.VMName}
+
+	if config.AllowInsecure {
+		cmdArgs = append(cmdArgs, "--insecure")
+	}
+
+	if _, err := TartExec(ctx, cmdArgs...); err != nil {
 		err := fmt.Errorf("Error cloning VM: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
