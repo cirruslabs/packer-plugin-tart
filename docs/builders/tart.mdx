@@ -65,11 +65,23 @@ Below we'll go through available options of this Packer plugin.
 
 @include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig-not-required.mdx'
 
+### Boot configuration
+
+@include 'common/bootcommand/BootConfig.mdx'
+
+#### Optional:
+
+@include 'common/bootcommand/BootConfig-not-required.mdx'
+
+For more examples of various boot commands, see [`example/` directory](https://github.com/cirruslabs/packer-plugin-tart/tree/main/example) and [macOS Packer Templates for Cirrus CI](https://github.com/cirruslabs/macos-image-templates) project on GitHub.
+
 ### VNC configuration
 
-### Optional:
+@include 'common/bootcommand/VNCConfig.mdx'
 
-- `boot_command` (list(string)) - Commands to type over VNC when the virtual machine is first booted. The goal of these commands should be to type just enough to initialize the operating system installer.
+#### Optional:
+
+@include 'common/bootcommand/VNCConfig-not-required.mdx'
 
 ### Example Usage
 
