@@ -207,6 +207,12 @@ func typeBootCommandOverVNC(
 
 	ui.Say("Connected to the VNC!")
 
+	if config.BootWait != 0 {
+		message := fmt.Sprintf("Waiting %v for VM to boot...", config.BootWait)
+		ui.Say(message)
+		time.Sleep(config.BootWait)
+	}
+
 	vncDriver := bootcommand.NewVNCDriver(vncClient, config.BootKeyInterval)
 
 	ui.Say("Typing the commands over VNC...")
