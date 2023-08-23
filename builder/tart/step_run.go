@@ -207,7 +207,7 @@ func typeBootCommandOverVNC(
 
 	ui.Say("Connected to the VNC!")
 
-	if config.BootWait != 0 {
+	if config.BootWait > 0 {
 		message := fmt.Sprintf("Waiting %v after the VM has booted...", config.BootWait)
 		ui.Say(message)
 		time.Sleep(config.BootWait)
