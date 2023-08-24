@@ -34,7 +34,6 @@ type Config struct {
 
 	CpuCount        uint8         `mapstructure:"cpu_count"`
 	CreateGraceTime time.Duration `mapstructure:"create_grace_time"`
-	BootWait        time.Duration `mapstructure:"boot_wait"`
 	DiskSizeGb      uint16        `mapstructure:"disk_size_gb"`
 	Display         string        `mapstructure:"display"`
 	Headless        bool          `mapstructure:"headless"`
