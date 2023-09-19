@@ -251,7 +251,7 @@ func detectHostIP(ctx context.Context, config *Config) (string, error) {
 		return config.HTTPAddress, nil
 	}
 
-	vmIPRaw, err := TartExec(ctx, "ip", "--wait", "120", config.VMName)
+	vmIPRaw, err := TartMachineIP(ctx, config.VMName, config.IpExtraArgs)
 	if err != nil {
 		return "", fmt.Errorf("%w: while running \"tart ip\": %v",
 			ErrFailedToDetectHostIP, err)

@@ -41,6 +41,7 @@ type Config struct {
 	Recovery        bool          `mapstructure:"recovery"`
 	Rosetta         string        `mapstructure:"rosetta"`
 	RunExtraArgs    []string      `mapstructure:"run_extra_args"`
+	IpExtraArgs     []string      `mapstructure:"ip_extra_args"`
 
 	ctx interpolate.Context
 }
@@ -100,8 +101,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	if !b.config.Recovery {
 		steps = append(steps,
 			&communicator.StepConnect{
-				Config:    &b.config.CommunicatorConfig,
-				Host:      TartMachineIP(ctx, b.config.VMName),
+				Config: &b.config.CommunicatorConfig,
+				Host: func(state multistep.StateBag) (string, error) {
+					return TartMachineIP(ctx, b.config.VMName, b.config.IpExtraArgs)
+				},
 				SSHConfig: b.config.CommunicatorConfig.SSHConfigFunc(),
 			},
 			new(stepResize),
