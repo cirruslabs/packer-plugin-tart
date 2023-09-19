@@ -92,6 +92,7 @@ type FlatConfig struct {
 	Recovery                  *bool             `mapstructure:"recovery" cty:"recovery" hcl:"recovery"`
 	Rosetta                   *string           `mapstructure:"rosetta" cty:"rosetta" hcl:"rosetta"`
 	RunExtraArgs              []string          `mapstructure:"run_extra_args" cty:"run_extra_args" hcl:"run_extra_args"`
+	IpExtraArgs               []string          `mapstructure:"ip_extra_args" cty:"ip_extra_args" hcl:"ip_extra_args"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -188,6 +189,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"recovery":                     &hcldec.AttrSpec{Name: "recovery", Type: cty.Bool, Required: false},
 		"rosetta":                      &hcldec.AttrSpec{Name: "rosetta", Type: cty.String, Required: false},
 		"run_extra_args":               &hcldec.AttrSpec{Name: "run_extra_args", Type: cty.List(cty.String), Required: false},
+		"ip_extra_args":                &hcldec.AttrSpec{Name: "ip_extra_args", Type: cty.List(cty.String), Required: false},
 	}
 	return s
 }

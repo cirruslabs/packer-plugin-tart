@@ -50,6 +50,7 @@ Below we'll go through available options of this Packer plugin.
 - `recovery` (bool) — Whether to boot the VM in recovery mode. Useful for disabling the System Integrity Protection automatically for the already created VMs.
 - `rosetta` (string) - Whether to enable Rosetta support of a Linux guest VM. Useful for running non-arm64 binaries in the guest VM. A common used value is `rosetta`, for further details and explanation run `tart run --help`.
 - `run_extra_args` (list(string)) - Extra arguments to pass to `tart run` command. For example, you can enable bridged networking by specifying `--net-bridged=en0`.
+- `ip_extra_args` (list(string)) - Extra arguments to pass to `tart ip` command. For example, you can use a different resolver in case of bridged network by specifying `--resolver=arp`.
 - `vm_base_name` (string) - The name of the VM to be used for the initial cloning. Can be either a local VM or a remote VM that will be pulled from a registry. Mutually exclusive with `from_ipsw` and `from_iso`.
 
 ### SSH connection configuration
