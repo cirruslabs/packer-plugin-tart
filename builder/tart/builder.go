@@ -57,6 +57,12 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 	err = config.Decode(&b.config, &config.DecodeOpts{
 		PluginType:  "packer.builder.tart",
 		Interpolate: true,
+		InterpolateFilter: &interpolate.RenderFilter{
+			// Postpone the boot_command interpolation because
+			// we don't know the HTTPIP and HTTPPort yet
+			Exclude: []string{"boot_command"},
+		},
+		InterpolateContext: &b.config.ctx,
 	}, raws...)
 	if err != nil {
 		return nil, nil, err
