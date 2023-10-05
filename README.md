@@ -1,7 +1,7 @@
 # Packer Plugin Tart
 
 The `Tart` multi-component plugin can be used with HashiCorp [Packer](https://www.packer.io)
-to create custom macOS images. For the full list of available features for this plugin see [docs](docs).
+to create custom macOS images. For the full list of available features for this plugin see [docs](https://developer.hashicorp.com/packer/plugins/builders/tart).
 
 ## Installation
 
