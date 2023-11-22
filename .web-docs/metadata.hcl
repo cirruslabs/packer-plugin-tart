@@ -3,7 +3,7 @@
 integration {
   name = "Tart"
   description = "TODO"
-  identifier = "packer/BrandonRomano/tart"
+  identifier = "packer/cirruslabs/tart"
   component {
     type = "builder"
     name = "Tart"
