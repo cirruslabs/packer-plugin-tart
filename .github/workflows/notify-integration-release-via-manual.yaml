@@ -44,7 +44,7 @@ jobs:
         with:
           # The integration identifier will be used by the Packer team to register the integration
           # the expected format is packer/<GitHub Org Name>/<plugin-name>
-          integration_identifier: "packer/hashicorp/scaffolding"
+          integration_identifier: "packer/cirruslabs/tart"
           release_version: ${{ github.event.inputs.version }}
           release_sha: ${{ github.event.inputs.branch }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
