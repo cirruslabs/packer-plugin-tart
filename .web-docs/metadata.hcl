@@ -2,7 +2,7 @@
 # https://github.com/hashicorp/integration-template#metadata-configuration
 integration {
   name = "Tart"
-  description = "TODO"
+  description = "Create macOS and Linux VMs for Apple Silicon powered by Tart virtualization."
   identifier = "packer/cirruslabs/tart"
   component {
     type = "builder"
