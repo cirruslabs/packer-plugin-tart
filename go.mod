@@ -5,11 +5,11 @@ go 1.19
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/diskfs/go-diskfs v1.3.0
-	github.com/hashicorp/hcl/v2 v2.13.0
-	github.com/hashicorp/packer-plugin-sdk v0.4.0
+	github.com/hashicorp/hcl/v2 v2.19.1
+	github.com/hashicorp/packer-plugin-sdk v0.5.2
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
-	github.com/stretchr/testify v1.8.2
-	github.com/zclconf/go-cty v1.10.0
+	github.com/stretchr/testify v1.8.3
+	github.com/zclconf/go-cty v1.13.3
 	howett.net/plist v1.0.0
 )
 
@@ -23,13 +23,15 @@ require (
 	github.com/ChrisTrenkamp/goxpath v0.0.0-20210404020558-97928f7e12b6 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
+	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-sdk-go v1.44.246 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dylanmei/iso8601 v0.1.0 // indirect
 	github.com/fatih/color v1.15.0 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.0 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -39,7 +41,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
-	github.com/hashicorp/consul/api v1.20.0 // indirect
+	github.com/hashicorp/consul/api v1.25.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-getter/gcs/v2 v2.2.1 // indirect
@@ -59,7 +61,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
-	github.com/hashicorp/vault/api v1.9.1 // indirect
+	github.com/hashicorp/vault/api v1.10.0 // indirect
 	github.com/hashicorp/yamux v0.1.1 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
@@ -87,19 +89,20 @@ require (
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pkg/sftp v1.13.5 // indirect
 	github.com/pkg/xattr v0.4.9 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/crypto v0.8.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c // indirect
-	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/term v0.7.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.119.0 // indirect
@@ -108,7 +111,6 @@ require (
 	google.golang.org/grpc v1.54.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/djherbis/times.v1 v1.3.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
