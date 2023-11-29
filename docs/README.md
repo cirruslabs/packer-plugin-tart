@@ -10,7 +10,7 @@ Here are some highlights of Tart:
 
 ### Installation
 
-To install this plugin, copy and paste this code into your Packer configuration, then run [`packer init`](https://www.packer.io/docs/commands/init).
+To install this plugin, copy and paste this code into your Packer configuration, then run [`packer init`](https://developer.hashicorp.com/packer/docs/commands/init).
 
 ```hcl
 packer {
@@ -33,7 +33,7 @@ $ packer plugins install github.com/cirruslabs/tart
 
 #### Builders
 
-- [tart](/packer/integrations/cirruslabs/latest/components/builder/tart) - The builder takes a template (in gridscale) or an iso-image, runs any provisioning necessary on the template/iso-image after launching it, then snapshots it into a reusable template. This reusable template can then be used as the foundation of new servers that are provisioned within gridscale user space.
+- [tart](/packer/integrations/cirruslabs/tart/latest/components/builder/tart) - The builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart virtualization](https://github.com/cirruslabs/tart).
 
 ### Getting Started
 
