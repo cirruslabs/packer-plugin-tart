@@ -7,7 +7,7 @@ before:
     - go test ./...
     # As part of the release doc files are included as a separate deliverable for
     # consumption by Packer.io. To include a separate docs.zip uncomment the following command.
-    - make ci-release-docs
+    # - make ci-release-docs
     # Check plugin compatibility with required version of the Packer SDK
     - make plugin-check
 builds:
