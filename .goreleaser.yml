@@ -21,6 +21,7 @@ builds:
       - darwin
     goarch:
       - arm64
+      - amd64
     binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 archives:
 - format: zip
