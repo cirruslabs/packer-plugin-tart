@@ -39,6 +39,7 @@ Below we'll go through available options of this Packer plugin.
 ### Optional Configuration
 
 - `allow_insecure` (boolean) — When cloning the image, connect to the OCI registry via an insecure HTTP protocol.
+- `pull_concurrency` (boolean) — Amount of layers to pull concurrently from an OCI registry when pulling the image. Default is 4 for Tart 2.0.0+.
 - `cpu_count` (number) - Amount of virtual CPUs to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
 - `create_grace_time` (duration string | ex: "1h5m2s") — Time to wait after finishing the installation process. Can be used to work around the issue when Virtualization.Framework's installation process is still running in the background for some time after `tart create` had already finished.
 - `disk_size_gb` — Disk size in GB to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.

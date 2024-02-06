@@ -22,6 +22,10 @@ func (s *stepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 		cmdArgs = append(cmdArgs, "--insecure")
 	}
 
+	if config.PullConcurrency > 0 {
+		cmdArgs = append(cmdArgs, "--concurrency", fmt.Sprintf("%d", config.PullConcurrency))
+	}
+
 	if _, err := TartExec(ctx, cmdArgs...); err != nil {
 		err := fmt.Errorf("Error cloning VM: %s", err)
 		state.Put("error", err)
