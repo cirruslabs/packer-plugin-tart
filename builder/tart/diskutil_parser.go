@@ -7,62 +7,69 @@ import (
 
 const expectedLastPartitionContent = "Apple_APFS"
 
+type DiskUtilOutput struct {
+	AllDisksAndPartitions []DiskWithPartitions `plist:"AllDisksAndPartitions"`
+}
+
+type DiskWithPartitions struct {
+	DeviceIdentifier string      `plist:"DeviceIdentifier"`
+	Partitions       []Partition `plist:"Partitions"`
+}
+
+type Partition struct {
+	DeviceIdentifier string `plist:"DeviceIdentifier"`
+	Content          string `plist:"Content"`
+}
+
 // ParseDiskUtilPlistOutput parses "diskutil list -plist" output,
 // makes sure there's only one disk on the system and returns
 // its name and the name of the last partition, additionally
 // validating that the last partition is not a recovery one
 // (which we should've deleted for the disk expansion to work).
 func ParseDiskUtilPlistOutput(input []byte) (string, string, error) {
-	unmarshalledInput := map[string]interface{}{}
+	var diskUtilOutput DiskUtilOutput
 
-	_, err := plist.Unmarshal(input, &unmarshalledInput)
+	_, err := plist.Unmarshal(input, &diskUtilOutput)
 	if err != nil {
-		return "", "", err
+		return "", "", fmt.Errorf("failed to parse \"diskutil list -plist\" output: %w", err)
 	}
 
-	allDisksAndPartitions, ok := unmarshalledInput["AllDisksAndPartitions"].([]interface{})
-	if !ok {
-		return "", "", fmt.Errorf("\"AllDisksAndPartitions\" value doesn't seem to be a dictionary")
+	type Candidate struct {
+		DiskName      string
+		PartitionName string
 	}
 
-	if len(allDisksAndPartitions) != 1 {
-		return "", "", fmt.Errorf("there are more than one physical disk present on the system")
+	var candidates []Candidate
+
+	for _, diskWithPartitions := range diskUtilOutput.AllDisksAndPartitions {
+		// Skip disks without partitions
+		if len(diskWithPartitions.Partitions) == 0 {
+			continue
+		}
+
+		// Add a candidate if this disk's last partition is expectedLastPartitionContent
+		lastPartition := diskWithPartitions.Partitions[len(diskWithPartitions.Partitions)-1]
+
+		if lastPartition.Content != expectedLastPartitionContent {
+			continue
+		}
+
+		candidates = append(candidates, Candidate{
+			DiskName:      diskWithPartitions.DeviceIdentifier,
+			PartitionName: lastPartition.DeviceIdentifier,
+		})
 	}
 
-	disk, ok := allDisksAndPartitions[0].(map[string]interface{})
-	if !ok {
-		return "", "", fmt.Errorf("first disk entry doesn't seem to be a dictionary")
+	if len(candidates) == 0 {
+		return "", "", fmt.Errorf("found no disks on which the last partition's \"Content\" "+
+			"is %q, make sure that the macOS is installed", expectedLastPartitionContent)
 	}
 
-	diskDeviceIdentifier, ok := disk["DeviceIdentifier"].(string)
-	if !ok {
-		return "", "", fmt.Errorf("first disk's \"DeviceIdentifier\" doesn't seem to be a string")
+	if len(candidates) > 1 {
+		return "", "", fmt.Errorf("found more than one disk on which the last partition's \"Content\" "+
+			"is %q, please only mount mount a single disk that contains APFS partitions otherwise it's hard "+
+			"to tell on which disk the macOS is installed", expectedLastPartitionContent)
 	}
 
-	partitions, ok := disk["Partitions"].([]interface{})
-	if !ok {
-		return "", "", fmt.Errorf("first disk's \"Partitions\" doesn't seem to be a list")
-	}
-
-	lastPartitionRaw := partitions[len(partitions)-1]
-	lastPartition, ok := lastPartitionRaw.(map[string]interface{})
-	if !ok {
-		return "", "", fmt.Errorf("last partition entry doesn't seem to be a map")
-	}
-
-	lastPartitionContent, ok := lastPartition["Content"].(string)
-	if !ok {
-		return "", "", fmt.Errorf("last partition's \"Content\" doesn't seem to be a string")
-	}
-	if lastPartitionContent != expectedLastPartitionContent {
-		return "", "", fmt.Errorf("last partition's \"Content\" should be %q, got %q",
-			expectedLastPartitionContent, lastPartitionContent)
-	}
-
-	lastPartitionDeviceIdentifier, ok := lastPartition["DeviceIdentifier"].(string)
-	if !ok {
-		return "", "", fmt.Errorf("last partition's \"DeviceIdentifier\" doesn't seem to be a string")
-	}
-
-	return diskDeviceIdentifier, lastPartitionDeviceIdentifier, nil
+	return candidates[0].DiskName, candidates[0].PartitionName, nil
 }
