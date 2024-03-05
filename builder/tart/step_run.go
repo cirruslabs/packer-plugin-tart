@@ -141,6 +141,7 @@ func typeBootCommandOverVNC(
 		}
 
 		ui.Say(fmt.Sprintf("Host IP is assumed to be %s", hostIP))
+		state.Put("http_ip", hostIP)
 
 		// Should be already filled by the Packer's commonsteps.StepHTTPServer
 		httpPort := state.Get("http_port").(int)
