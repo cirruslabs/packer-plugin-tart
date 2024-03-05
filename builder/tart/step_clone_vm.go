@@ -38,5 +38,14 @@ func (s *stepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 }
 
 func (s *stepCloneVM) Cleanup(state multistep.StateBag) {
-	// nothing to clean up
+	config := state.Get("config").(*Config)
+	ui := state.Get("ui").(packersdk.Ui)
+
+	_, cancelled := state.GetOk(multistep.StateCancelled)
+	_, halted := state.GetOk(multistep.StateHalted)
+	if cancelled || halted {
+		ui.Say("Cleaning up cloned virtual machine...")
+		cmdArgs := []string{"delete", config.VMName}
+		_, _ = TartExec(context.Background(), cmdArgs...)
+	}
 }
