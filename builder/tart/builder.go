@@ -77,7 +77,9 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
-	steps := []multistep.Step{}
+	steps := []multistep.Step{
+		new(stepCleanVM), // cleanup the VM if the build is cancelled or halted
+	}
 
 	if b.config.HTTPDir != "" || len(b.config.HTTPContent) != 0 {
 		if errs := b.config.HTTPConfig.Prepare(interpolate.NewContext()); len(errs) != 0 {
