@@ -103,7 +103,7 @@ func (s *stepRun) Cleanup(state multistep.StateBag) {
 		ui.Say("Gracefully shutting down the VM...")
 
 		shutdownCmd := packersdk.RemoteCmd{
-			Command: fmt.Sprintf("echo %s | sudo -S shutdown -h now", config.CommunicatorConfig.Password()),
+			Command: fmt.Sprintf("echo %s | sudo -S -p '' shutdown -h now", config.CommunicatorConfig.Password()),
 		}
 
 		err := shutdownCmd.RunWithUi(context.Background(), communicator.(packersdk.Communicator), ui)
