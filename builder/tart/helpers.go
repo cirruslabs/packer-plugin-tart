@@ -14,7 +14,12 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/shell-local/localexec"
 )
 
-const tartCommand = "tart"
+func TartCommand() string {
+	if tart := os.Getenv("TART_COMMAND"); tart != "" {
+		return tart
+	}
+	return "tart"
+}
 
 func PathInTartHome(elem ...string) string {
 	if home := os.Getenv("TART_HOME"); home != "" {
@@ -28,7 +33,7 @@ func TartExec(ctx context.Context, ui packer.Ui, args ...string) (string, error)
 
 	log.Printf("Executing tart: %#v", args)
 
-	cmd := exec.CommandContext(ctx, tartCommand, args...)
+	cmd := exec.CommandContext(ctx, TartCommand(), args...)
 
 	if ui != nil {
 		return "", localexec.RunAndStream(cmd, ui, []string{})

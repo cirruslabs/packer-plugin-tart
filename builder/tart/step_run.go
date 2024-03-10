@@ -52,7 +52,7 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	if len(config.RunExtraArgs) > 0 {
 		runArgs = append(runArgs, config.RunExtraArgs...)
 	}
-	cmd := exec.CommandContext(ctx, tartCommand, runArgs...)
+	cmd := exec.CommandContext(ctx, TartCommand(), runArgs...)
 	stdout := bytes.NewBufferString("")
 	cmd.Stdout = stdout
 	cmd.Stderr = uiWriter{ui: ui}
