@@ -10,9 +10,9 @@ HASHICORP_PACKER_PLUGIN_SDK_VERSION?=$(shell go list -m github.com/hashicorp/pac
 build:
 	@go build -o ${BINARY}
 
-dev: build
-	@mkdir -p ~/.packer.d/plugins/
-	@mv ${BINARY} ~/.packer.d/plugins/${BINARY}
+dev:
+	go build -ldflags="-X '${BINARY}/version.VersionPrerelease=dev'" -o ${BINARY}
+	packer plugins install --path ${BINARY} "github.com/cirruslabs/$(NAME)"
 
 test:
 	@go test -race -count $(COUNT) $(TEST) -timeout=3m
