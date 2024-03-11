@@ -9,5 +9,5 @@ func TartMachineIP(ctx context.Context, vmName string, ipExtraArgs []string) (st
 	if len(ipExtraArgs) > 0 {
 		ipArgs = append(ipArgs, ipExtraArgs...)
 	}
-	return TartExec(ctx, ipArgs...)
+	return TartExec(ctx, nil, ipArgs...)
 }

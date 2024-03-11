@@ -21,6 +21,6 @@ func (s *stepCleanVM) Cleanup(state multistep.StateBag) {
 	if cancelled || halted {
 		ui.Say("Cleaning up virtual machine...")
 		cmdArgs := []string{"delete", config.VMName}
-		_, _ = TartExec(context.Background(), cmdArgs...)
+		_, _ = TartExec(context.Background(), ui, cmdArgs...)
 	}
 }

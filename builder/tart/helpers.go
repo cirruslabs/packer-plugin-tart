@@ -9,6 +9,9 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/shell-local/localexec"
 )
 
 const tartCommand = "tart"
@@ -21,20 +24,26 @@ func PathInTartHome(elem ...string) string {
 	return path.Join(userHome, ".tart", path.Join(elem...))
 }
 
-func TartExec(ctx context.Context, args ...string) (string, error) {
-	var out bytes.Buffer
+func TartExec(ctx context.Context, ui packer.Ui, args ...string) (string, error) {
 
 	log.Printf("Executing tart: %#v", args)
+
 	cmd := exec.CommandContext(ctx, tartCommand, args...)
-	cmd.Stdout = &out
-	cmd.Stderr = &out
-	err := cmd.Run()
 
-	outString := strings.TrimSpace(out.String())
+	if ui != nil {
+		return "", localexec.RunAndStream(cmd, ui, []string{})
+	} else {
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &out
+		err := cmd.Run()
 
-	if _, ok := err.(*exec.ExitError); ok {
-		err = fmt.Errorf("tart error: %s", outString)
+		outString := strings.TrimSpace(out.String())
+
+		if _, ok := err.(*exec.ExitError); ok {
+				err = fmt.Errorf("tart error: %s", outString)
+		}
+
+		return outString, err
 	}
-
-	return outString, err
 }
