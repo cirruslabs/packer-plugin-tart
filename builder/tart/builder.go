@@ -104,10 +104,14 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	steps = append(steps,
 		new(stepSetVM),
 		new(stepDiskFilePrepare),
-		new(stepRun),
 	)
 
-	if !b.config.Recovery {
+	communicatorConfigured := b.config.CommunicatorConfig.Type != "none"
+	if len(b.config.BootCommand) > 0 || communicatorConfigured {
+		steps = append(steps, new(stepRun))
+	}
+
+	if !b.config.Recovery && communicatorConfigured {
 		steps = append(steps,
 			&communicator.StepConnect{
 				Config: &b.config.CommunicatorConfig,
