@@ -21,14 +21,16 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	diskImagePath := PathInTartHome("vms", config.VMName, "disk.img")
 
 	if config.DiskSizeGb > 0 {
-		err := growDisk(config.DiskSizeGb, diskImagePath)
+		sizeChanged, err := growDisk(config.DiskSizeGb, diskImagePath)
 
 		if err != nil {
 			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
 
-		state.Put("disk-changed", true)
+		if sizeChanged {
+			state.Put("disk-changed", true)
+		}
 	}
 
 	disk, err := diskfs.Open(diskImagePath)
@@ -69,20 +71,24 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	return multistep.ActionContinue
 }
 
-func growDisk(diskSizeGb uint16, diskImagePath string) error {
+func growDisk(diskSizeGb uint16, diskImagePath string) (bool, error) {
 	desiredSizeInBytes := int64(diskSizeGb) * 1_000_000_000
 
 	diskImageStat, err := os.Stat(diskImagePath)
 
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if diskImageStat.Size() > desiredSizeInBytes {
-		return errors.New("Image disk is larger then desired! Only disk size increasing is supported! Can't shrink the disk ATM. :-(")
+		return false, errors.New("Image disk is larger then desired! Only disk size increasing is supported! Can't shrink the disk ATM. :-(")
 	}
 
-	return os.Truncate(diskImagePath, desiredSizeInBytes)
+	if diskImageStat.Size() == desiredSizeInBytes {
+		return false, nil
+	}
+
+	return true, os.Truncate(diskImagePath, desiredSizeInBytes)
 }
 
 // Cleanup stops the VM.
