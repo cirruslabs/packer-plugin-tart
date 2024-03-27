@@ -60,7 +60,9 @@ referenced will be available in your builder.
 
 Example usage from a builder:
 
-	`wget http://{{ .HTTPIP }}:{{ .HTTPPort }}/foo/bar/preseed.cfg`
+```
+wget http://{{ .HTTPIP }}:{{ .HTTPPort }}/foo/bar/preseed.cfg
+```
 
 <!-- End of code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; -->
 
