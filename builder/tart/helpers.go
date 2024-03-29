@@ -25,14 +25,13 @@ func PathInTartHome(elem ...string) string {
 }
 
 func TartExec(ctx context.Context, ui packer.Ui, args ...string) (string, error) {
-
-	log.Printf("Executing tart: %#v", args)
-
 	cmd := exec.CommandContext(ctx, tartCommand, args...)
 
 	if ui != nil {
 		return "", localexec.RunAndStream(cmd, ui, []string{})
 	} else {
+		log.Printf("Executing tart: %#v", args)
+
 		var out bytes.Buffer
 		cmd.Stdout = &out
 		cmd.Stderr = &out
