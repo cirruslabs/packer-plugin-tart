@@ -17,11 +17,11 @@ source "tart-cli" "tart" {
     # grub
     "<wait5s><enter>",
     # autoinstall prompt
-    "<wait30s>yes<enter>"
+    "<wait30s>yes<enter>",
   ]
   ssh_password = "ubuntu"
   ssh_username = "ubuntu"
-  ssh_timeout  = "120s"
+  ssh_timeout  = "300s"
 }
 
 build {

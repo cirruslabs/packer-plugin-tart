@@ -36,6 +36,6 @@ autoinstall:
   late-commands:
     - "echo 'ubuntu ALL=(ALL) NOPASSWD: ALL' > /target/etc/sudoers.d/ubuntu-nopasswd"
 
-  shutdown: "poweroff"
+  shutdown: "reboot"
 EOF
 hdiutil makehybrid -o cidata.iso cidata -joliet -iso

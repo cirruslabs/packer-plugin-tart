@@ -49,6 +49,9 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	if config.Rosetta != "" {
 		runArgs = append(runArgs, fmt.Sprintf("--rosetta=%s", config.Rosetta))
 	}
+	for _, iso := range config.FromISO {
+		runArgs = append(runArgs, fmt.Sprintf("--disk=%s:ro", iso))
+	}
 	if len(config.RunExtraArgs) > 0 {
 		runArgs = append(runArgs, config.RunExtraArgs...)
 	}
@@ -73,7 +76,7 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 	state.Put("tart-cmd", cmd)
 
-	if len(config.BootCommand) > 0 && (len(config.FromISO) == 0) && !config.DisableVNC {
+	if len(config.BootCommand) > 0 && !config.DisableVNC {
 		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout) {
 			return multistep.ActionHalt
 		}
