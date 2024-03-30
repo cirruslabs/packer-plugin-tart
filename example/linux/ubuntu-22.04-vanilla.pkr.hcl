@@ -8,7 +8,7 @@ packer {
 }
 
 source "tart-cli" "tart" {
-  from_iso     = ["cidata.iso", "ubuntu-22.04.1-live-server-arm64.iso"]
+  from_iso     = ["cidata.iso", "ubuntu-22.04.4-live-server-arm64.iso"]
   vm_name      = "ubuntu-22.04-vanilla"
   cpu_count    = 4
   memory_gb    = 8
