@@ -1,33 +1,49 @@
 Type: `tart`
 
-The `tart` builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart virtualization](https://github.com/cirruslabs/tart).
+The `tart` builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart](https://tart.run/).
 
-Here are some highlights of Tart:
+Make sure you have followed the [installation instructions](/packer/integrations/cirruslabs/tart#installation) before continuing.
 
-- Tart uses Apple's own `Virtualization.Framework` for [near-native performance](https://browser.geekbench.com/v5/cpu/compare/14966395?baseline=14966339).
-- Push/Pull virtual machines from any OCI-compatible container registry.
-- Built-in CI integration.
-- Use this Tart Packer Plugin to automate VM creation.
+## Example Usage
 
-## How to get started with Tart
+Here is a basic example of creating a macOS virtual machine:
 
-Here is how you can install Tart, pull a remote macOS virtual machine and run it:
+```hcl
+variable "macos_version" {
+  type =  string
+  default = "ventura"
+}
 
-```bash
-brew install cirruslabs/cli/tart
-tart clone ghcr.io/cirruslabs/macos-ventura-vanilla:latest ventura-vanilla
-tart run ventura-vanilla
+source "tart-cli" "tart" {
+  vm_base_name = "${var.macos_version}-vanilla"
+  vm_name      = "${var.macos_version}-base"
+  cpu_count    = 4
+  memory_gb    = 8
+  disk_size_gb = 50
+  ssh_username = "admin"
+  ssh_password = "admin"
+  ssh_timeout  = "120s"
+}
+
+build {
+  sources = ["source.tart-cli.tart"]
+
+  provisioner "shell" {
+    inline = ["echo 'Disabling spotlight indexing...'", "sudo mdutil -a -i off"]
+  }
+
+  # more provisioners
+}
 ```
 
-Below we'll go through available options of this Packer plugin.
+For more advanced examples, please refer to the [`example/` directory](https://github.com/cirruslabs/packer-plugin-tart/tree/main/example) and the [macOS](https://github.com/cirruslabs/macos-image-templates) and [Linux](https://github.com/cirruslabs/linux-image-templates) Packer templates for [Cirrus CI](https://cirrus-ci.org/).
 
-<!-- Builder Configuration Fields -->
 
-### Required Configuration
+## Configuration Reference
 
 - `vm_name` (string) - The name of the VM to create (only when `from_ipsw`, `from_iso` or `vm_base_name` are used) and run.
 
-### Optional Configuration
+#### Optional:
 
 - `allow_insecure` (boolean) — When cloning the image, connect to the OCI registry via an insecure HTTP protocol.
 - `pull_concurrency` (boolean) — Amount of layers to pull concurrently from an OCI registry when pulling the image. Default is 4 for Tart 2.0.0+.
@@ -50,7 +66,7 @@ Below we'll go through available options of this Packer plugin.
 - `ssh_username` (string) - Username to use for the communication over SSH to run provision steps.
 - `ssh_password` (string) - Password to use for the communication over SSH to run provision steps.
 
-## HTTP server configuration
+### HTTP server configuration
 
 <!-- Code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; DO NOT EDIT MANUALLY -->
 
@@ -67,7 +83,7 @@ wget http://{{ .HTTPIP }}:{{ .HTTPPort }}/foo/bar/preseed.cfg
 <!-- End of code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; -->
 
 
-### Optional:
+#### Optional:
 
 <!-- Code generated from the comments of the HTTPConfig struct in multistep/commonsteps/http_config.go; DO NOT EDIT MANUALLY -->
 
@@ -276,8 +292,6 @@ For more examples of various boot commands, see the sample projects from our
 <!-- End of code generated from the comments of the BootConfig struct in bootcommand/config.go; -->
 
 
-For more examples of various boot commands, see [`example/` directory](https://github.com/cirruslabs/packer-plugin-tart/tree/main/example) and [macOS Packer Templates for Cirrus CI](https://github.com/cirruslabs/macos-image-templates) project on GitHub.
-
 ### VNC configuration
 
 <!-- Code generated from the comments of the VNCConfig struct in bootcommand/config.go; DO NOT EDIT MANUALLY -->
@@ -303,38 +317,3 @@ You can tune this delay on a per-builder basis by specifying
 - `boot_key_interval` (duration string | ex: "1h5m2s") - Time in ms to wait between each key press
 
 <!-- End of code generated from the comments of the VNCConfig struct in bootcommand/config.go; -->
-
-
-### Example Usage
-
-Here is a basic example of creating a macOS virtual machine:
-
-```hcl
-variable "macos_version" {
-  type =  string
-  default = "ventura"
-}
-
-source "tart-cli" "tart" {
-  vm_base_name = "${var.macos_version}-vanilla"
-  vm_name      = "${var.macos_version}-base"
-  cpu_count    = 4
-  memory_gb    = 8
-  disk_size_gb = 50
-  ssh_username = "admin"
-  ssh_password = "admin"
-  ssh_timeout  = "120s"
-}
-
-build {
-  sources = ["source.tart-cli.tart"]
-
-  provisioner "shell" {
-    inline = ["echo 'Disabling spotlight indexing...'", "sudo mdutil -a -i off"]
-  }
-
-  # more provisioners
-}
-```
-
-For more advanced examples, please referer to [this repository](https://github.com/cirruslabs/macos-image-templates).
