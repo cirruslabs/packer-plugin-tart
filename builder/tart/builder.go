@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"time"
+	"fmt"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
@@ -67,6 +68,22 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 	}, raws...)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	fromArgs := []bool {
+		b.config.FromIPSW != "",
+		len(b.config.FromISO) > 0,
+		b.config.VMBaseName != "",
+	}
+
+	fromArgsSet := 0
+	for _, v := range fromArgs {
+		if v {
+			fromArgsSet++
+			if fromArgsSet > 1 {
+				return nil, nil, fmt.Errorf("from_ipsw, from_iso, and vm_base_name are mutually exclusive")
+			}
+		}
 	}
 
 	if errs := b.config.CommunicatorConfig.Prepare(&b.config.ctx); len(errs) != 0 {
