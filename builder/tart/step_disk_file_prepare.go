@@ -48,6 +48,11 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 		return multistep.ActionHalt
 	}
 
+	if config.KeepRecoveryPartition {
+		ui.Say("Skipping recovery partition removal...")
+		return multistep.ActionContinue
+	}
+
 	gptTable := partitionTable.(*gpt.Table)
 
 	for i, partition := range gptTable.Partitions {
