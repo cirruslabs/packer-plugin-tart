@@ -40,7 +40,7 @@ func TartExec(ctx context.Context, ui packer.Ui, args ...string) (string, error)
 		outString := strings.TrimSpace(out.String())
 
 		if _, ok := err.(*exec.ExitError); ok {
-				err = fmt.Errorf("tart error: %s", outString)
+			err = fmt.Errorf("tart error: %s", outString)
 		}
 
 		return outString, err

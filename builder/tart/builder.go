@@ -5,8 +5,8 @@ package tart
 import (
 	"context"
 	"errors"
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
@@ -70,7 +70,7 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 		return nil, nil, err
 	}
 
-	fromArgs := []bool {
+	fromArgs := []bool{
 		b.config.FromIPSW != "",
 		len(b.config.FromISO) > 0,
 		b.config.VMBaseName != "",

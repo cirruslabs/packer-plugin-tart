@@ -19,7 +19,7 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 
 	isLinux := len(config.FromISO) > 0
 
-	createArguments := []string{ "create" }
+	createArguments := []string{"create"}
 	if config.FromIPSW != "" {
 		createArguments = append(createArguments, "--from-ipsw", config.FromIPSW)
 	} else if isLinux {

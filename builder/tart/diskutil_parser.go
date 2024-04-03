@@ -67,7 +67,7 @@ func ParseDiskUtilPlistOutput(input []byte) (string, string, error) {
 
 	if len(candidates) > 1 {
 		return "", "", fmt.Errorf("found more than one disk on which the last partition's \"Content\" "+
-			"is %q, please only mount mount a single disk that contains APFS partitions otherwise it's hard "+
+			"is %q, please only mount a single disk that contains APFS partitions otherwise it's hard "+
 			"to tell on which disk the macOS is installed", expectedLastPartitionContent)
 	}
 
