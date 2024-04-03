@@ -48,6 +48,10 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 
 			return multistep.ActionHalt
 		}
+	default:
+		ui.Error(fmt.Sprintf("Unsupported \"recovery_partition\" value: %q", config.RecoveryPartition))
+
+		return multistep.ActionHalt
 	}
 
 	return multistep.ActionContinue
