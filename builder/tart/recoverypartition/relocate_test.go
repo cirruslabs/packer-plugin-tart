@@ -2,6 +2,7 @@ package recoverypartition_test
 
 import (
 	"bufio"
+	"bytes"
 	"github.com/diskfs/go-diskfs"
 	"github.com/diskfs/go-diskfs/partition/gpt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -13,16 +14,6 @@ import (
 	"path/filepath"
 	"testing"
 )
-
-type characterReader byte
-
-func (characterReader characterReader) Read(p []byte) (n int, err error) {
-	for i := 0; i < len(p); i++ {
-		p[i] = byte(characterReader)
-	}
-
-	return len(p), nil
-}
 
 func TestRelocate(t *testing.T) {
 	// A disk size that results in a 3-sector hole after relocating the recovery partition
@@ -71,12 +62,10 @@ func TestRelocate(t *testing.T) {
 	require.NoError(t, oldDisk.Partition(gptTable))
 
 	// Write partition contents
-	firstPartitionContents, err := io.ReadAll(io.LimitReader(characterReader('A'), partitionSizeBytes))
-	require.NoError(t, err)
+	firstPartitionContents := bytes.Repeat([]byte{'A'}, partitionSizeBytes)
 	writeFile(t, diskPath, firstPartition.GetStart(), firstPartition.GetSize(), firstPartitionContents)
 
-	secondPartitionContents, err := io.ReadAll(io.LimitReader(characterReader('B'), partitionSizeBytes))
-	require.NoError(t, err)
+	secondPartitionContents := bytes.Repeat([]byte{'B'}, partitionSizeBytes)
 	writeFile(t, diskPath, secondPartition.GetStart(), secondPartition.GetSize(), secondPartitionContents)
 
 	// Relocate the recovery partition to the end of disk
@@ -125,8 +114,7 @@ func TestRelocate(t *testing.T) {
 	// Validate the hole that gets formed after we relocate the recovery partition
 	//
 	// This hole still contains the bytes of the recovery partition.
-	expectedHoleContents, err := io.ReadAll(io.LimitReader(characterReader('B'), holeSizeBytes))
-	require.NoError(t, err)
+	expectedHoleContents := bytes.Repeat([]byte{'B'}, holeSizeBytes)
 
 	actualHoleContents, err := io.ReadAll(io.LimitReader(diskFileReader, holeSizeBytes))
 	require.NoError(t, err)
