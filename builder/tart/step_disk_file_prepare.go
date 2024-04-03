@@ -37,8 +37,10 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	switch config.RecoveryPartition {
 	case "":
 	case "delete":
-		if action := recoverypartition.Delete(diskImagePath, ui, state); action != multistep.ActionContinue {
-			return action
+		if err := recoverypartition.Delete(diskImagePath, ui, state); err != nil {
+			ui.Error(fmt.Sprintf("Failed to delete the recovery partition: %v", err))
+
+			return multistep.ActionHalt
 		}
 	case "keep":
 		// do nothing
