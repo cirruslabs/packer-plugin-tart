@@ -84,7 +84,7 @@ func Relocate(diskImagePath string, ui packer.Ui, state multistep.StateBag) erro
 
 	ui.Say("Restoring recovery partition contents...")
 
-	if err := writePartition(diskImagePath, tmpFile.Name(), recoveryPartition.GetStart(), recoveryPartition.GetSize()); err != nil {
+	if err := restorePartition(diskImagePath, tmpFile.Name(), recoveryPartition.GetStart(), recoveryPartition.GetSize()); err != nil {
 		return fmt.Errorf("failed to restore the recovery partition contents: %w", err)
 	}
 
@@ -112,7 +112,7 @@ func dumpPartition(diskFilePath string, partitionFilePath string, off int64, n i
 	return nil
 }
 
-func writePartition(diskFilePath string, partitionFilePath string, off int64, n int64) error {
+func restorePartition(diskFilePath string, partitionFilePath string, off int64, n int64) error {
 	diskFile, err := os.OpenFile(diskFilePath, os.O_RDWR, 0600)
 	if err != nil {
 		return err
