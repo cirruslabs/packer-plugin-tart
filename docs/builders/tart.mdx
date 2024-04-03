@@ -1,6 +1,6 @@
 ---
 description: >
-  The Tart builder is used to create macOS and Linux virtual machines on Apple Silicon hardware.
+  The Tart builder is used to create macOS and Linux virtual machines for Apple Silicon.
 page_title: Tart - Builders
 nav_title: Tart
 ---
@@ -9,83 +9,11 @@ nav_title: Tart
 
 Type: `tart`
 
-The `tart` builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart virtualization](https://github.com/cirruslabs/tart).
+The `tart` builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart](https://tart.run/).
 
-Here are some highlights of Tart:
+Make sure you have followed the [installation instructions](/packer/integrations/cirruslabs/tart#installation) before continuing.
 
-- Tart uses Apple's own `Virtualization.Framework` for [near-native performance](https://browser.geekbench.com/v5/cpu/compare/14966395?baseline=14966339).
-- Push/Pull virtual machines from any OCI-compatible container registry.
-- Built-in CI integration.
-- Use this Tart Packer Plugin to automate VM creation.
-
-## How to get started with Tart
-
-Here is how you can install Tart, pull a remote macOS virtual machine and run it:
-
-```bash
-brew install cirruslabs/cli/tart
-tart clone ghcr.io/cirruslabs/macos-ventura-vanilla:latest ventura-vanilla
-tart run ventura-vanilla
-```
-
-Below we'll go through available options of this Packer plugin.
-
-<!-- Builder Configuration Fields -->
-
-### Required Configuration
-
-- `vm_name` (string) - The name of the VM to create (only when `from_ipsw`, `from_iso` or `vm_base_name` are used) and run.
-
-### Optional Configuration
-
-- `allow_insecure` (boolean) — When cloning the image, connect to the OCI registry via an insecure HTTP protocol.
-- `pull_concurrency` (boolean) — Amount of layers to pull concurrently from an OCI registry when pulling the image. Default is 4 for Tart 2.0.0+.
-- `cpu_count` (number) - Amount of virtual CPUs to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
-- `create_grace_time` (duration string | ex: "1h5m2s") — Time to wait after finishing the installation process. Can be used to work around the issue when Virtualization.Framework's installation process is still running in the background for some time after `tart create` had already finished.
-- `disk_size_gb` — Disk size in GB to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
-- `display` (string) — VM display resolution in a format of `<width>x<height>` (e.g. `1200x800`) to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
-- `from_ipsw` (string) - Location of an IPSW file to initialize a macOS virtual machine from. Can be either an absolute path to a file on disk, URL to fetch a remote file or `latest`. Mutually exclusive with `from_iso` and `vm_base_name`.
-- `from_iso` (list(string)) - Location of the ISO files to initialize a Linux virtual machine from. All values should represent an absolute path to a file on disk. Mutually exclusive with `from_ipsw` and `vm_base_name`.
-- `headless` (bool) - Whether to show graphics interface of a VM. Useful for debugging the `boot_command`.
-- `memory_gb` (number) - Amount of unified memory in GB to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
-- `recovery` (bool) — Whether to boot the VM in recovery mode. Useful for disabling the System Integrity Protection automatically for the already created VMs.
-- `rosetta` (string) - Whether to enable Rosetta support of a Linux guest VM. Useful for running non-arm64 binaries in the guest VM. A common used value is `rosetta`, for further details and explanation run `tart run --help`.
-- `run_extra_args` (list(string)) - Extra arguments to pass to `tart run` command. For example, you can enable bridged networking by specifying `--net-bridged=en0`.
-- `ip_extra_args` (list(string)) - Extra arguments to pass to `tart ip` command. For example, you can use a different resolver in case of bridged network by specifying `--resolver=arp`.
-- `vm_base_name` (string) - The name of the VM to be used for the initial cloning. Can be either a local VM or a remote VM that will be pulled from a registry. Mutually exclusive with `from_ipsw` and `from_iso`.
-
-### SSH connection configuration
-
-- `ssh_username` (string) - Username to use for the communication over SSH to run provision steps.
-- `ssh_password` (string) - Password to use for the communication over SSH to run provision steps.
-
-## HTTP server configuration
-
-@include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig.mdx'
-
-### Optional:
-
-@include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig-not-required.mdx'
-
-### Boot configuration
-
-@include 'packer-plugin-sdk/bootcommand/BootConfig.mdx'
-
-#### Optional:
-
-@include 'packer-plugin-sdk/bootcommand/BootConfig-not-required.mdx'
-
-For more examples of various boot commands, see [`example/` directory](https://github.com/cirruslabs/packer-plugin-tart/tree/main/example) and [macOS Packer Templates for Cirrus CI](https://github.com/cirruslabs/macos-image-templates) project on GitHub.
-
-### VNC configuration
-
-@include 'packer-plugin-sdk/bootcommand/VNCConfig.mdx'
-
-#### Optional:
-
-@include 'packer-plugin-sdk/bootcommand/VNCConfig-not-required.mdx'
-
-### Example Usage
+## Example Usage
 
 Here is a basic example of creating a macOS virtual machine:
 
@@ -117,4 +45,56 @@ build {
 }
 ```
 
-For more advanced examples, please referer to [this repository](https://github.com/cirruslabs/macos-image-templates).
+For more advanced examples, please refer to the [`example/` directory](https://github.com/cirruslabs/packer-plugin-tart/tree/main/example) and the [macOS](https://github.com/cirruslabs/macos-image-templates) and [Linux](https://github.com/cirruslabs/linux-image-templates) Packer templates for [Cirrus CI](https://cirrus-ci.org/).
+
+
+## Configuration Reference
+
+- `vm_name` (string) - The name of the VM to create (only when `from_ipsw`, `from_iso` or `vm_base_name` are used) and run.
+
+#### Optional:
+
+- `allow_insecure` (boolean) — When cloning the image, connect to the OCI registry via an insecure HTTP protocol.
+- `pull_concurrency` (boolean) — Amount of layers to pull concurrently from an OCI registry when pulling the image. Default is 4 for Tart 2.0.0+.
+- `cpu_count` (number) - Amount of virtual CPUs to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
+- `create_grace_time` (duration string | ex: "1h5m2s") — Time to wait after finishing the installation process. Can be used to work around the issue when Virtualization.Framework's installation process is still running in the background for some time after `tart create` had already finished.
+- `disk_size_gb` — Disk size in GB to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
+- `display` (string) — VM display resolution in a format of `<width>x<height>` (e.g. `1200x800`) to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
+- `from_ipsw` (string) - Location of an IPSW file to initialize a macOS virtual machine from. Can be either an absolute path to a file on disk, URL to fetch a remote file or `latest`. Mutually exclusive with `from_iso` and `vm_base_name`.
+- `from_iso` (list(string)) - Location of the ISO files to initialize a Linux virtual machine from. All values should represent an absolute path to a file on disk. Mutually exclusive with `from_ipsw` and `vm_base_name`.
+- `headless` (bool) - Whether to show graphics interface of a VM. Useful for debugging the `boot_command`.
+- `memory_gb` (number) - Amount of unified memory in GB to use for the new VM. Overrides `tart create` default value when using `from_ipsw` and `from_iso` and VM settings when using `vm_base_name`.
+- `recovery` (bool) — Whether to boot the VM in recovery mode. Useful for disabling the System Integrity Protection automatically for the already created VMs.
+- `rosetta` (string) - Whether to enable Rosetta support of a Linux guest VM. Useful for running non-arm64 binaries in the guest VM. A common used value is `rosetta`, for further details and explanation run `tart run --help`.
+- `run_extra_args` (list(string)) - Extra arguments to pass to `tart run` command. For example, you can enable bridged networking by specifying `--net-bridged=en0`.
+- `ip_extra_args` (list(string)) - Extra arguments to pass to `tart ip` command. For example, you can use a different resolver in case of bridged network by specifying `--resolver=arp`.
+- `vm_base_name` (string) - The name of the VM to be used for the initial cloning. Can be either a local VM or a remote VM that will be pulled from a registry. Mutually exclusive with `from_ipsw` and `from_iso`.
+
+### SSH connection configuration
+
+- `ssh_username` (string) - Username to use for the communication over SSH to run provision steps.
+- `ssh_password` (string) - Password to use for the communication over SSH to run provision steps.
+
+### HTTP server configuration
+
+@include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig.mdx'
+
+#### Optional:
+
+@include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig-not-required.mdx'
+
+### Boot configuration
+
+@include 'packer-plugin-sdk/bootcommand/BootConfig.mdx'
+
+#### Optional:
+
+@include 'packer-plugin-sdk/bootcommand/BootConfig-not-required.mdx'
+
+### VNC configuration
+
+@include 'packer-plugin-sdk/bootcommand/VNCConfig.mdx'
+
+#### Optional:
+
+@include 'packer-plugin-sdk/bootcommand/VNCConfig-not-required.mdx'

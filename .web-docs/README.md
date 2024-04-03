@@ -1,5 +1,5 @@
 
-The `tart` builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart virtualization](https://github.com/cirruslabs/tart).
+The `tart` builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart](https://tart.run/).
 
 Here are some highlights of Tart:
 
@@ -29,19 +29,21 @@ Alternatively, you can use `packer plugins install` to manage installation of th
 $ packer plugins install github.com/cirruslabs/tart
 ```
 
-### Components
+#### Installing Tart
 
-#### Builders
-
-- [tart](/packer/integrations/cirruslabs/tart/latest/components/builder/tart) - The builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart virtualization](https://github.com/cirruslabs/tart).
-
-### Getting Started
-
-Here is how you can install Tart, pull a remote macOS virtual machine and run it:
+The plugin requires a working installation of Tart. To install and verify your installation:
 
 ```bash
 brew install cirruslabs/cli/tart
 tart clone ghcr.io/cirruslabs/macos-ventura-vanilla:latest ventura-vanilla
 tart run ventura-vanilla
 ```
+
+Or follow the quick start guide [here](https://tart.run/quick-start/).
+
+### Components
+
+#### Builders
+
+- [tart](/packer/integrations/cirruslabs/tart/latest/components/builder/tart) - The builder is used to create macOS and Linux VMs for Apple Silicon powered by [Tart](https://tart.run/).
 
