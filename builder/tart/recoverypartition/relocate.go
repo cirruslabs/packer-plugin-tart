@@ -15,7 +15,7 @@ func Relocate(diskImagePath string, ui packer.Ui, state multistep.StateBag) erro
 	// Open the disk image and read its partition table
 	disk, err := diskfs.Open(diskImagePath)
 	if err != nil {
-		return fmt.Errorf("failed to open the disk image: %v", err)
+		return fmt.Errorf("failed to open the disk image: %w", err)
 	}
 
 	partitionTable, err := disk.GetPartitionTable()
