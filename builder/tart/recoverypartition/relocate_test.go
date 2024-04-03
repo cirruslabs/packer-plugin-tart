@@ -159,6 +159,7 @@ func TestRelocate(t *testing.T) {
 	_, err = diskFileReader.Discard(secondaryTableSize - (2 * gptEntrySizeBytes))
 	require.NoError(t, err)
 
+	// Ensure that we've reached end of the disk
 	_, err = diskFileReader.ReadByte()
 	require.ErrorIs(t, io.EOF, err)
 }
