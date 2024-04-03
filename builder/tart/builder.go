@@ -110,10 +110,8 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		return nil, errors.New("\"vm_name\" is required")
 	}
 
-	if b.config.FromIPSW != "" {
+	if b.config.FromIPSW != "" || len(b.config.FromISO) > 0 {
 		steps = append(steps, new(stepCreateVM))
-	} else if len(b.config.FromISO) > 0 {
-		steps = append(steps, new(stepCreateLinuxVM))
 	} else if b.config.VMBaseName != "" {
 		steps = append(steps, new(stepCloneVM))
 	}

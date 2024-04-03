@@ -2,9 +2,9 @@
 
 set -eu
 
-if [ ! -f ubuntu-22.04.1-live-server-arm64.iso ]; then
+if [ ! -f ubuntu-22.04.4-live-server-arm64.iso ]; then
 	echo "Downloading image..."
-	curl -fSLO https://cdimage.ubuntu.com/releases/22.04/release/ubuntu-22.04.1-live-server-arm64.iso
+	curl -fSLO https://cdimage.ubuntu.com/releases/22.04/release/ubuntu-22.04.4-live-server-arm64.iso
 fi
 
 if [ -d cidata ]; then
@@ -36,6 +36,6 @@ autoinstall:
   late-commands:
     - "echo 'ubuntu ALL=(ALL) NOPASSWD: ALL' > /target/etc/sudoers.d/ubuntu-nopasswd"
 
-  shutdown: "poweroff"
+  shutdown: "reboot"
 EOF
 hdiutil makehybrid -o cidata.iso cidata -joliet -iso

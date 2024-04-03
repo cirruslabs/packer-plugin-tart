@@ -1,14 +1,14 @@
 packer {
   required_plugins {
     tart = {
-      version = ">= 0.5.3"
+      version = ">= 1.10.0"
       source  = "github.com/cirruslabs/tart"
     }
   }
 }
 
 source "tart-cli" "tart" {
-  from_iso     = ["cidata.iso", "ubuntu-22.04.1-live-server-arm64.iso"]
+  from_iso     = ["cidata.iso", "ubuntu-22.04.4-live-server-arm64.iso"]
   vm_name      = "ubuntu-22.04-vanilla"
   cpu_count    = 4
   memory_gb    = 8
@@ -17,11 +17,11 @@ source "tart-cli" "tart" {
     # grub
     "<wait5s><enter>",
     # autoinstall prompt
-    "<wait30s>yes<enter>"
+    "<wait30s>yes<enter>",
   ]
   ssh_password = "ubuntu"
   ssh_username = "ubuntu"
-  ssh_timeout  = "120s"
+  ssh_timeout  = "300s"
 }
 
 build {

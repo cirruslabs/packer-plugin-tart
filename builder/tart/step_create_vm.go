@@ -17,8 +17,13 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 
 	ui.Say("Creating virtual machine...")
 
-	createArguments := []string{
-		"create", "--from-ipsw", config.FromIPSW,
+	isLinux := len(config.FromISO) > 0
+
+	createArguments := []string{ "create" }
+	if config.FromIPSW != "" {
+		createArguments = append(createArguments, "--from-ipsw", config.FromIPSW)
+	} else if isLinux {
+		createArguments = append(createArguments, "--linux")
 	}
 
 	if config.DiskSizeGb > 0 {

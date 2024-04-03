@@ -44,6 +44,11 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	partitionTable, err := disk.GetPartitionTable()
 
 	if err != nil {
+		if err.Error() == "unknown disk partition type" {
+			// Disk may not be initialized with a partition table yet
+			return multistep.ActionContinue
+		}
+
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
