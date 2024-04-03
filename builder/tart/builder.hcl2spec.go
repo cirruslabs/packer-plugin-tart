@@ -87,6 +87,7 @@ type FlatConfig struct {
 	CpuCount                  *uint8            `mapstructure:"cpu_count" cty:"cpu_count" hcl:"cpu_count"`
 	CreateGraceTime           *string           `mapstructure:"create_grace_time" cty:"create_grace_time" hcl:"create_grace_time"`
 	DiskSizeGb                *uint16           `mapstructure:"disk_size_gb" cty:"disk_size_gb" hcl:"disk_size_gb"`
+	RecoveryPartition         *string           `mapstructure:"recovery_partition" cty:"recovery_partition" hcl:"recovery_partition"`
 	Display                   *string           `mapstructure:"display" cty:"display" hcl:"display"`
 	Headless                  *bool             `mapstructure:"headless" cty:"headless" hcl:"headless"`
 	MemoryGb                  *uint16           `mapstructure:"memory_gb" cty:"memory_gb" hcl:"memory_gb"`
@@ -185,6 +186,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"cpu_count":                    &hcldec.AttrSpec{Name: "cpu_count", Type: cty.Number, Required: false},
 		"create_grace_time":            &hcldec.AttrSpec{Name: "create_grace_time", Type: cty.String, Required: false},
 		"disk_size_gb":                 &hcldec.AttrSpec{Name: "disk_size_gb", Type: cty.Number, Required: false},
+		"recovery_partition":           &hcldec.AttrSpec{Name: "recovery_partition", Type: cty.String, Required: false},
 		"display":                      &hcldec.AttrSpec{Name: "display", Type: cty.String, Required: false},
 		"headless":                     &hcldec.AttrSpec{Name: "headless", Type: cty.Bool, Required: false},
 		"memory_gb":                    &hcldec.AttrSpec{Name: "memory_gb", Type: cty.Number, Required: false},

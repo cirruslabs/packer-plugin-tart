@@ -34,16 +34,17 @@ type Config struct {
 	AllowInsecure   bool     `mapstructure:"allow_insecure"`
 	PullConcurrency uint16   `mapstructure:"pull_concurrency"`
 
-	CpuCount        uint8         `mapstructure:"cpu_count"`
-	CreateGraceTime time.Duration `mapstructure:"create_grace_time"`
-	DiskSizeGb      uint16        `mapstructure:"disk_size_gb"`
-	Display         string        `mapstructure:"display"`
-	Headless        bool          `mapstructure:"headless"`
-	MemoryGb        uint16        `mapstructure:"memory_gb"`
-	Recovery        bool          `mapstructure:"recovery"`
-	Rosetta         string        `mapstructure:"rosetta"`
-	RunExtraArgs    []string      `mapstructure:"run_extra_args"`
-	IpExtraArgs     []string      `mapstructure:"ip_extra_args"`
+	CpuCount          uint8         `mapstructure:"cpu_count"`
+	CreateGraceTime   time.Duration `mapstructure:"create_grace_time"`
+	DiskSizeGb        uint16        `mapstructure:"disk_size_gb"`
+	RecoveryPartition string        `mapstructure:"recovery_partition"`
+	Display           string        `mapstructure:"display"`
+	Headless          bool          `mapstructure:"headless"`
+	MemoryGb          uint16        `mapstructure:"memory_gb"`
+	Recovery          bool          `mapstructure:"recovery"`
+	Rosetta           string        `mapstructure:"rosetta"`
+	RunExtraArgs      []string      `mapstructure:"run_extra_args"`
+	IpExtraArgs       []string      `mapstructure:"ip_extra_args"`
 
 	ctx interpolate.Context
 }
