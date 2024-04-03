@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"packer-plugin-tart/builder/tart/statekey"
 	"strings"
 )
 
@@ -14,8 +15,7 @@ type stepResize struct{}
 func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packersdk.Ui)
 
-	_, diskChanged := state.GetOk("disk-changed")
-
+	_, diskChanged := state.GetOk(statekey.DiskChanged)
 	if !diskChanged {
 		return multistep.ActionContinue
 	}

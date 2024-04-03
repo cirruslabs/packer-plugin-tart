@@ -3,11 +3,12 @@ package tart
 import (
 	"context"
 	"errors"
-	"github.com/diskfs/go-diskfs"
-	"github.com/diskfs/go-diskfs/partition/gpt"
+	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"os"
+	"packer-plugin-tart/builder/tart/recoverypartition"
+	"packer-plugin-tart/builder/tart/statekey"
 )
 
 type stepDiskFilePrepare struct{}
@@ -29,48 +30,30 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 		}
 
 		if sizeChanged {
-			state.Put("disk-changed", true)
+			state.Put(statekey.DiskChanged, true)
 		}
 	}
 
-	disk, err := diskfs.Open(diskImagePath)
+	switch config.RecoveryPartition {
+	case "":
+	case "delete":
+		if err := recoverypartition.Delete(diskImagePath, ui, state); err != nil {
+			ui.Error(fmt.Sprintf("Failed to delete the recovery partition: %v", err))
 
-	if err != nil {
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-
-	ui.Say("Getting partition table...")
-	partitionTable, err := disk.GetPartitionTable()
-
-	if err != nil {
-		if err.Error() == "unknown disk partition type" {
-			// Disk may not be initialized with a partition table yet
-			return multistep.ActionContinue
-		}
-
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-
-	gptTable := partitionTable.(*gpt.Table)
-
-	for i, partition := range gptTable.Partitions {
-		if partition.Name != "RecoveryOSContainer" {
-			continue
-		}
-		ui.Say("Found recovery partition. Let's remove it to save space...")
-		// there are max 128 partitions and we probably on the third one
-		// the rest are just empty structs so let's reuse them
-		gptTable.Partitions[i] = gptTable.Partitions[len(gptTable.Partitions)-1]
-		err = disk.Partition(gptTable)
-		if err != nil {
-			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
-		ui.Say("Successfully updated partitions...")
-		state.Put("disk-changed", true)
-		break
+	case "keep":
+		// do nothing
+	case "relocate":
+		if err := recoverypartition.Relocate(diskImagePath, ui, state); err != nil {
+			ui.Error(fmt.Sprintf("Failed to relocate the recovery partition: %v", err))
+
+			return multistep.ActionHalt
+		}
+	default:
+		ui.Error(fmt.Sprintf("Unsupported \"recovery_partition\" value: %q", config.RecoveryPartition))
+
+		return multistep.ActionHalt
 	}
 
 	return multistep.ActionContinue
