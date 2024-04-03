@@ -1,7 +1,8 @@
-package tart
+package tart_test
 
 import (
 	"github.com/stretchr/testify/require"
+	"packer-plugin-tart/builder/tart"
 	"testing"
 )
 
@@ -63,7 +64,7 @@ func TestSingleDisk(t *testing.T) {
 </plist>
 `
 
-	diskName, partitionName, err := ParseDiskUtilPlistOutput([]byte(plistBytes))
+	diskName, partitionName, err := tart.ParseDiskUtilPlistOutput([]byte(plistBytes))
 	require.NoError(t, err)
 	require.Equal(t, "disk0", diskName)
 	require.Equal(t, "disk0s2", partitionName)
@@ -138,7 +139,7 @@ func TestMultipleDisks(t *testing.T) {
 </plist>
 `
 
-	diskName, partitionName, err := ParseDiskUtilPlistOutput([]byte(plistBytes))
+	diskName, partitionName, err := tart.ParseDiskUtilPlistOutput([]byte(plistBytes))
 	require.NoError(t, err)
 	require.Equal(t, "disk0", diskName)
 	require.Equal(t, "disk0s2", partitionName)
