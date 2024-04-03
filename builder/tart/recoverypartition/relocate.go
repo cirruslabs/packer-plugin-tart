@@ -9,6 +9,7 @@ import (
 	"github.com/samber/lo"
 	"io"
 	"os"
+	"packer-plugin-tart/builder/tart/statekey"
 )
 
 func Relocate(diskImagePath string, ui packer.Ui, state multistep.StateBag) error {
@@ -87,6 +88,8 @@ func Relocate(diskImagePath string, ui packer.Ui, state multistep.StateBag) erro
 	if err := restorePartition(diskImagePath, tmpFile.Name(), recoveryPartition.GetStart(), recoveryPartition.GetSize()); err != nil {
 		return fmt.Errorf("failed to restore the recovery partition contents: %w", err)
 	}
+
+	state.Put(statekey.DiskChanged, true)
 
 	return nil
 }
