@@ -40,7 +40,7 @@ func Delete(diskImagePath string, ui packer.Ui, state multistep.StateBag) error 
 
 		if recoveryPartitionIdx != -1 {
 			return fmt.Errorf("found a recovery partition at GPT entry %d, but there's another recovery "+
-				"partition exists at GPT antry %d, refusing to proceed", idx+1, recoveryPartitionIdx+1)
+				"partition at GPT entry %d, refusing to proceed", idx+1, recoveryPartitionIdx+1)
 		}
 
 		recoveryPartitionIdx = idx
