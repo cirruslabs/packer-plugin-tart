@@ -10,6 +10,7 @@ import (
 )
 
 func Delete(diskImagePath string, ui packer.Ui, state multistep.StateBag) error {
+	// Open the disk image and read its partition table
 	disk, err := diskfs.Open(diskImagePath)
 	if err != nil {
 		return fmt.Errorf("failed to open the disk image: %w", err)
@@ -19,8 +20,9 @@ func Delete(diskImagePath string, ui packer.Ui, state multistep.StateBag) error 
 
 	partitionTable, err := disk.GetPartitionTable()
 	if err != nil {
+		// Disk may not be initialized with a partition table yet
+		// when running on a freshly created Linux VMs, for example
 		if err.Error() == "unknown disk partition type" {
-			// Disk may not be initialized with a partition table yet
 			return nil
 		}
 
@@ -29,29 +31,44 @@ func Delete(diskImagePath string, ui packer.Ui, state multistep.StateBag) error 
 
 	gptTable := partitionTable.(*gpt.Table)
 
-	for i, partition := range gptTable.Partitions {
+	recoveryPartitionIdx := -1
+
+	for idx, partition := range gptTable.Partitions {
 		if partition.Name != Name {
 			continue
 		}
 
-		ui.Say("Found recovery partition. Let's remove it to save space...")
-
-		// there are max 128 partitions and we probably on the third one
-		// the rest are just empty structs so let's reuse them
-		gptTable.Partitions[i] = gptTable.Partitions[len(gptTable.Partitions)-1]
-
-		if err = disk.Partition(gptTable); err != nil {
-			return fmt.Errorf("failed to write the new partition table: %w", err)
+		if recoveryPartitionIdx != -1 {
+			return fmt.Errorf("found a recovery partition at GPT entry %d, but there's another recovery "+
+				"partition exists at GPT antry %d, refusing to proceed", idx+1, recoveryPartitionIdx+1)
 		}
 
-		ui.Say("Successfully updated partitions...")
+		recoveryPartitionIdx = idx
+	}
 
-		state.Put(statekey.DiskChanged, true)
+	if recoveryPartitionIdx == -1 {
+		ui.Say("No recovery partition was found, assuming that it was already deleted.")
 
 		return nil
 	}
 
-	ui.Say("No recovery partition was found, assuming that it was already deleted.")
+	if recoveryPartitionIdx != len(gptTable.Partitions)-1 {
+		return fmt.Errorf("found a recovery partition at GPT entry %d, but it's "+
+			"not the last partition on the disk, refusing to proceed", recoveryPartitionIdx+1)
+	}
+
+	ui.Say(fmt.Sprintf("Found a recovery partition at GPT entry %d, let's remove it "+
+		"to save space and allow for resizing the main partition...", recoveryPartitionIdx+1))
+
+	gptTable.Partitions = gptTable.Partitions[:recoveryPartitionIdx]
+
+	if err = disk.Partition(gptTable); err != nil {
+		return fmt.Errorf("failed to write the new partition table: %w", err)
+	}
+
+	ui.Say("Successfully updated partitions!")
+
+	state.Put(statekey.DiskChanged, true)
 
 	return nil
 }
