@@ -1,5 +1,7 @@
 env:
   - CGO_ENABLED=0
+  - API_VERSION={{ if index .Env "API_VERSION"  }}{{ .Env.API_VERSION }}{{ else }}x5.0{{ end }}
+
 before:
   hooks:
     # We strongly recommend running tests to catch any regression before release.
@@ -16,13 +18,15 @@ builds:
     flags:
       - -trimpath #removes all file system paths from the compiled executable
     ldflags:
-      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}} -X {{ .ModulePath }}/version.VersionPrerelease= '
+      - '-s -w -X {{ .ModulePath }}/version.Version={{.Version}}'
     goos:
       - darwin
     goarch:
       - arm64
       - amd64
     binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
+snapshot:
+  name_template: "{{ if eq .Summary .Tag }}{{ .Version }}{{ else }}{{ incpatch .Version }}-dev{{ end }}"
 archives:
 - format: zip
   files:
