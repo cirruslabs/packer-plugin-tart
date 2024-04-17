@@ -5,14 +5,17 @@ COUNT?=1
 TEST?=$(shell go list ./...)
 HASHICORP_PACKER_PLUGIN_SDK_VERSION?=$(shell go list -m github.com/hashicorp/packer-plugin-sdk | cut -d " " -f2)
 
-.PHONY: dev
-
+.PHONY: build
+build: PLUGIN_VERSION=$(shell git describe --tags --dirty --always | \
+		sed 's/^v//' | perl -pe 's/(\d+\.\d+\.)(\d+)-.*/$${1}.($$2+1)."-dev"/e')
 build:
-	@go build -o ${BINARY}
+	@go build -ldflags="-X '${BINARY}/version.Version=$(PLUGIN_VERSION)'" -o ${BINARY}
 
-dev:
-	go build -ldflags="-X '${BINARY}/version.VersionPrerelease=dev'" -o ${BINARY}
-	packer plugins install --path ${BINARY} "github.com/cirruslabs/$(NAME)"
+.PHONY: install
+install: build
+	@packer plugins install --path ${BINARY} "github.com/cirruslabs/$(NAME)"
+
+dev: install
 
 test:
 	@go test -race -count $(COUNT) $(TEST) -timeout=3m
