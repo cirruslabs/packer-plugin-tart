@@ -13,7 +13,15 @@ func (ui QuietUi) Ask(s string) (string, error) {
 	return ui.BaseUi.Ask(s)
 }
 
+func (ui QuietUi) Askf(s string, args ...any) (string, error) {
+	return ui.BaseUi.Askf(s)
+}
+
 func (ui QuietUi) Say(s string) {
+	// do nothing
+}
+
+func (ui QuietUi) Sayf(s string, a ...any) {
 	// do nothing
 }
 
@@ -23,6 +31,10 @@ func (ui QuietUi) Message(s string) {
 
 func (ui QuietUi) Error(s string) {
 	ui.BaseUi.Error(s)
+}
+
+func (ui QuietUi) Errorf(s string, args ...any) {
+	ui.BaseUi.Errorf(s, args...)
 }
 
 func (ui QuietUi) Machine(s string, s2 ...string) {
