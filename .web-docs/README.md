@@ -15,8 +15,8 @@ To install this plugin, copy and paste this code into your Packer configuration,
 ```hcl
 packer {
   required_plugins {
-    gridscale = {
-      version = ">= 1.6.1"
+    tart = {
+      version = ">= 1.11.1"
       source  = "github.com/cirruslabs/tart"
     }
   }
