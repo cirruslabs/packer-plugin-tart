@@ -131,6 +131,8 @@ func typeBootCommandOverVNC(
 	ui packersdk.Ui,
 	tartRunStdout *bytes.Buffer,
 ) bool {
+	ui.Say("Typing boot commands over VNC...")
+
 	if config.HTTPDir != "" || len(config.HTTPContent) != 0 {
 		ui.Say("Detecting host IP...")
 
@@ -220,9 +222,10 @@ func typeBootCommandOverVNC(
 		time.Sleep(config.VNCConfig.BootWait)
 	}
 
-	vncDriver := bootcommand.NewVNCDriver(vncClient, config.BootKeyInterval)
+	message := fmt.Sprintf("Typing commands with key interval %v...", config.BootKeyInterval)
+	ui.Say(message)
 
-	ui.Say("Typing the commands over VNC...")
+	vncDriver := bootcommand.NewVNCDriver(vncClient, config.BootKeyInterval)
 
 	command, err := interpolate.Render(config.VNCConfig.FlatBootCommand(), &config.ctx)
 	if err != nil {
@@ -249,6 +252,8 @@ func typeBootCommandOverVNC(
 
 		return false
 	}
+
+	ui.Say("Done typing commands!")
 
 	return true
 }
