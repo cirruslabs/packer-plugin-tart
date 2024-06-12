@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/mitchellh/go-vnc"
 	"net"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -100,11 +101,14 @@ func (u uiWriter) Write(p []byte) (n int, err error) {
 func (s *stepRun) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
+	cmd := state.Get("tart-cmd").(*exec.Cmd)
+	if cmd == nil {
+		return // Nothing to shut down
+	}
 
 	communicator := state.Get("communicator")
 	if communicator != nil {
 		ui.Say("Gracefully shutting down the VM...")
-
 		shutdownCmd := packersdk.RemoteCmd{
 			Command: fmt.Sprintf("echo %s | sudo -S -p '' shutdown -h now", config.CommunicatorConfig.Password()),
 		}
@@ -114,14 +118,19 @@ func (s *stepRun) Cleanup(state multistep.StateBag) {
 			ui.Say("Failed to gracefully shutdown VM...")
 			ui.Error(err.Error())
 		}
+	} else {
+		ui.Say("Shutting down the VM...")
+		err := cmd.Process.Signal(os.Interrupt)
+		if err != nil {
+			ui.Say("Failed to shutdown VM...")
+			ui.Error(err.Error())
+		}
 	}
 
-	cmd := state.Get("tart-cmd").(*exec.Cmd)
-
-	if cmd != nil {
-		ui.Say("Waiting for the tart process to exit...")
-		_, _ = cmd.Process.Wait()
-	}
+	// Always wait, even if we didn't initiate shutdown,
+	// so that we properly read and close stdout/stderr.
+	ui.Say("Waiting for the tart process to exit...")
+	_, _ = cmd.Process.Wait()
 }
 
 func typeBootCommandOverVNC(
