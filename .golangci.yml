@@ -85,6 +85,7 @@ linters:
     # We can control this ourselves
     - varnamelen
     - contextcheck
+    - mnd
 
     # Packer-plugin specific disables
     - forcetypeassert

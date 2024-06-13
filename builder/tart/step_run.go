@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/mitchellh/go-vnc"
 	"net"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -76,13 +77,13 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 	state.Put("tart-cmd", cmd)
 
+	ui.Say("Successfully started the virtual machine...")
+
 	if len(config.BootCommand) > 0 && !config.DisableVNC {
 		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout) {
 			return multistep.ActionHalt
 		}
 	}
-
-	ui.Say("Successfully started the virtual machine...")
 
 	return multistep.ActionContinue
 }
@@ -100,11 +101,14 @@ func (u uiWriter) Write(p []byte) (n int, err error) {
 func (s *stepRun) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
+	cmd := state.Get("tart-cmd").(*exec.Cmd)
+	if cmd == nil {
+		return // Nothing to shut down
+	}
 
 	communicator := state.Get("communicator")
 	if communicator != nil {
 		ui.Say("Gracefully shutting down the VM...")
-
 		shutdownCmd := packersdk.RemoteCmd{
 			Command: fmt.Sprintf("echo %s | sudo -S -p '' shutdown -h now", config.CommunicatorConfig.Password()),
 		}
@@ -114,14 +118,19 @@ func (s *stepRun) Cleanup(state multistep.StateBag) {
 			ui.Say("Failed to gracefully shutdown VM...")
 			ui.Error(err.Error())
 		}
+	} else {
+		ui.Say("Shutting down the VM...")
+		err := cmd.Process.Signal(os.Interrupt)
+		if err != nil {
+			ui.Say("Failed to shutdown VM...")
+			ui.Error(err.Error())
+		}
 	}
 
-	cmd := state.Get("tart-cmd").(*exec.Cmd)
-
-	if cmd != nil {
-		ui.Say("Waiting for the tart process to exit...")
-		_, _ = cmd.Process.Wait()
-	}
+	// Always wait, even if we didn't initiate shutdown,
+	// so that we properly read and close stdout/stderr.
+	ui.Say("Waiting for the tart process to exit...")
+	_, _ = cmd.Process.Wait()
 }
 
 func typeBootCommandOverVNC(
@@ -131,6 +140,8 @@ func typeBootCommandOverVNC(
 	ui packersdk.Ui,
 	tartRunStdout *bytes.Buffer,
 ) bool {
+	ui.Say("Typing boot commands over VNC...")
+
 	if config.HTTPDir != "" || len(config.HTTPContent) != 0 {
 		ui.Say("Detecting host IP...")
 
@@ -220,9 +231,10 @@ func typeBootCommandOverVNC(
 		time.Sleep(config.VNCConfig.BootWait)
 	}
 
-	vncDriver := bootcommand.NewVNCDriver(vncClient, config.BootKeyInterval)
+	message := fmt.Sprintf("Typing commands with key interval %v...", config.BootKeyInterval)
+	ui.Say(message)
 
-	ui.Say("Typing the commands over VNC...")
+	vncDriver := bootcommand.NewVNCDriver(vncClient, config.BootKeyInterval)
 
 	command, err := interpolate.Render(config.VNCConfig.FlatBootCommand(), &config.ctx)
 	if err != nil {
@@ -249,6 +261,8 @@ func typeBootCommandOverVNC(
 
 		return false
 	}
+
+	ui.Say("Done typing commands!")
 
 	return true
 }
