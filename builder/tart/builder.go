@@ -129,6 +129,10 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 
 	if !b.config.Recovery && communicatorConfigured {
 		steps = append(steps,
+			&communicator.StepSSHKeyGen{
+				CommConf:            &b.config.CommunicatorConfig,
+				SSHTemporaryKeyPair: b.config.CommunicatorConfig.SSH.SSHTemporaryKeyPair,
+			},
 			&communicator.StepConnect{
 				Config: &b.config.CommunicatorConfig,
 				Host: func(state multistep.StateBag) (string, error) {
