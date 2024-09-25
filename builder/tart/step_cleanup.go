@@ -13,14 +13,23 @@ func (s *stepCleanVM) Run(ctx context.Context, state multistep.StateBag) multist
 }
 
 func (s *stepCleanVM) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	_, cancelled := state.GetOk(multistep.StateCancelled)
 	_, halted := state.GetOk(multistep.StateHalted)
-	if cancelled || halted {
-		ui.Say("Cleaning up virtual machine...")
-		cmdArgs := []string{"delete", config.VMName}
-		_, _ = TartExec(context.Background(), ui, cmdArgs...)
+
+	// Only cleanup on cancellation
+	if !(cancelled || halted) {
+		return
 	}
+
+	// Only cleanup when the VM was created
+	vmName, ok := state.Get("vm_name").(string)
+	if !ok {
+		return
+	}
+
+	ui.Say("Cleaning up virtual machine...")
+	cmdArgs := []string{"delete", vmName}
+	_, _ = TartExec(context.Background(), ui, cmdArgs...)
 }

@@ -32,6 +32,8 @@ func (s *stepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 		return multistep.ActionHalt
 	}
 
+	state.Put("vm_name", config.VMName)
+
 	return multistep.ActionContinue
 }
 
