@@ -38,6 +38,8 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 		return multistep.ActionHalt
 	}
 
+	state.Put("vm_name", config.VMName)
+
 	if config.CreateGraceTime != 0 {
 		message := fmt.Sprintf("Waiting %v to let the Virtualization.Framework's installation process "+
 			"to finish correctly...", config.CreateGraceTime)
