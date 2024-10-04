@@ -32,6 +32,7 @@ type Config struct {
 	VMBaseName      string   `mapstructure:"vm_base_name"`
 	VMName          string   `mapstructure:"vm_name"`
 	AllowInsecure   bool     `mapstructure:"allow_insecure"`
+	AlwaysPull      bool     `mapstructure:"always_pull"`
 	PullConcurrency uint16   `mapstructure:"pull_concurrency"`
 
 	CpuCount          uint8         `mapstructure:"cpu_count"`

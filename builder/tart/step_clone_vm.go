@@ -14,17 +14,33 @@ func (s *stepCloneVM) Run(ctx context.Context, state multistep.StateBag) multist
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 
-	ui.Say("Cloning virtual machine...")
-
-	cmdArgs := []string{"clone", config.VMBaseName, config.VMName}
+	var commonArgs []string
 
 	if config.AllowInsecure {
-		cmdArgs = append(cmdArgs, "--insecure")
+		commonArgs = append(commonArgs, "--insecure")
 	}
 
 	if config.PullConcurrency > 0 {
-		cmdArgs = append(cmdArgs, "--concurrency", fmt.Sprintf("%d", config.PullConcurrency))
+		commonArgs = append(commonArgs, "--concurrency", fmt.Sprintf("%d", config.PullConcurrency))
 	}
+
+	if config.AlwaysPull {
+		ui.Say("Pulling virtual machine...")
+
+		cmdArgs := []string{"pull", config.VMBaseName}
+		cmdArgs = append(cmdArgs, commonArgs...)
+
+		if _, err := TartExec(ctx, ui, cmdArgs...); err != nil {
+			err := fmt.Errorf("Error pulling VM: %s", err)
+			state.Put("error", err)
+			return multistep.ActionHalt
+		}
+	}
+
+	ui.Say("Cloning virtual machine...")
+
+	cmdArgs := []string{"clone", config.VMBaseName, config.VMName}
+	cmdArgs = append(cmdArgs, commonArgs...)
 
 	if _, err := TartExec(ctx, ui, cmdArgs...); err != nil {
 		err := fmt.Errorf("Error cloning VM: %s", err)
