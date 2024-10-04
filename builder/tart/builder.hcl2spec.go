@@ -83,6 +83,7 @@ type FlatConfig struct {
 	VMBaseName                *string           `mapstructure:"vm_base_name" cty:"vm_base_name" hcl:"vm_base_name"`
 	VMName                    *string           `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	AllowInsecure             *bool             `mapstructure:"allow_insecure" cty:"allow_insecure" hcl:"allow_insecure"`
+	AlwaysPull                *bool             `mapstructure:"always_pull" cty:"always_pull" hcl:"always_pull"`
 	PullConcurrency           *uint16           `mapstructure:"pull_concurrency" cty:"pull_concurrency" hcl:"pull_concurrency"`
 	CpuCount                  *uint8            `mapstructure:"cpu_count" cty:"cpu_count" hcl:"cpu_count"`
 	CreateGraceTime           *string           `mapstructure:"create_grace_time" cty:"create_grace_time" hcl:"create_grace_time"`
@@ -182,6 +183,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vm_base_name":                 &hcldec.AttrSpec{Name: "vm_base_name", Type: cty.String, Required: false},
 		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
 		"allow_insecure":               &hcldec.AttrSpec{Name: "allow_insecure", Type: cty.Bool, Required: false},
+		"always_pull":                  &hcldec.AttrSpec{Name: "always_pull", Type: cty.Bool, Required: false},
 		"pull_concurrency":             &hcldec.AttrSpec{Name: "pull_concurrency", Type: cty.Number, Required: false},
 		"cpu_count":                    &hcldec.AttrSpec{Name: "cpu_count", Type: cty.Number, Required: false},
 		"create_grace_time":            &hcldec.AttrSpec{Name: "create_grace_time", Type: cty.String, Required: false},
