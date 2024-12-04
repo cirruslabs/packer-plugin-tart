@@ -19,7 +19,7 @@ to create custom macOS images. For the full list of available features for this 
 >
 > For now, you can use a [nightly version](https://github.com/hashicorp/packer/releases/tag/nightly) of Packer.
 >
-> We have [an issue](https://github.com/cirruslabs/packer-plugin-tart/issues/79) for this, so don't hesitate to ask any questions and subscribe to get updates.
+> We have [a tracking issue](https://github.com/cirruslabs/packer-plugin-tart/issues/79) for this, so don't hesitate to ask any questions and subscribe to get updates.
 
 ## Installation
 
