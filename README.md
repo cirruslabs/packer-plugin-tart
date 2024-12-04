@@ -3,6 +3,24 @@
 The `Tart` multi-component plugin can be used with HashiCorp [Packer](https://www.packer.io)
 to create custom macOS images. For the full list of available features for this plugin see [docs](https://developer.hashicorp.com/packer/integrations/cirruslabs/tart/latest/components/builder/tart).
 
+> [!IMPORTANT]
+>
+> **macOS 15 (Sequoia)**
+>
+> In case you've upgraded and encountering an issue below:
+>
+> ```
+> ssh: connect to host [...] port 22: No route to host
+> ```
+>
+> This is likely related to the [newly introduced "Local Network" permission](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy) on macOS Sequoia and the fact that GitLab Runner's binary might have no `LC_UUID` identifier, which is critical for the local network privacy mechanism.
+>
+> We've already [submitted a fix to Packer](https://github.com/hashicorp/packer/pull/13214), but the next release is planned for Jan, 2025.
+>
+> For now, you can use a [nightly version](https://github.com/hashicorp/packer/releases/tag/nightly) of Packer.
+>
+> We have [an issue](https://github.com/cirruslabs/packer-plugin-tart/issues/79) for this, so don't hesitate to ask any questions and subscribe to get updates.
+
 ## Installation
 
 ### Using pre-built releases
