@@ -294,6 +294,10 @@ For more examples of various boot commands, see the sample projects from our
 <!-- End of code generated from the comments of the BootConfig struct in bootcommand/config.go; -->
 
 
+*Note:*: If `boot_wait` is not specified the Tart builder will wait for the first
+frame from the VM, as an indication that the VM has booted and is ready to receive
+key presses.
+
 ### VNC configuration
 
 <!-- Code generated from the comments of the VNCConfig struct in bootcommand/config.go; DO NOT EDIT MANUALLY -->
