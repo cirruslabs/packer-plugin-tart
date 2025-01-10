@@ -14,10 +14,21 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"compress/zlib"
 	"encoding/binary"
+
+	"image"
+	"image/color"
+	"image/png"
+	"io/ioutil"
+
+	"github.com/progrium/darwinkit/macos/foundation"
+	"github.com/progrium/darwinkit/macos/vision"
+	"github.com/progrium/darwinkit/objc"
+	"unsafe"
 )
 
 var vncRegexp = regexp.MustCompile("vnc://.*:(.*)@(.*):([0-9]{1,5})")
@@ -25,8 +36,10 @@ var vncRegexp = regexp.MustCompile("vnc://.*:(.*)@(.*):([0-9]{1,5})")
 type customDriver struct {
 	vncClient            *vnc.ClientConn
 	serverMessageChannel chan vnc.ServerMessage
+	config               *Config
 	vncDriver            bootcommand.BCDriver
 	keyInterval          time.Duration
+	waitString           strings.Builder
 	ctx                  context.Context
 }
 
@@ -47,6 +60,7 @@ func newCustomDriver(vncClient *vnc.ClientConn,
 	return &customDriver{
 		vncClient:            vncClient,
 		serverMessageChannel: serverMessageChannel,
+		config:               config,
 		vncDriver:            bootcommand.NewVNCDriver(vncClient, keyInterval),
 		keyInterval:          keyInterval,
 		ctx:                  ctx,
@@ -57,8 +71,118 @@ func (d *customDriver) KeyInterval() time.Duration {
 	return d.keyInterval
 }
 
+const WaitForStringStart uint32 = 0xE000
+const WaitForStringEnd uint32 = 0xE0001
+
+var debugFrameIndex int = 0
+
 func (d *customDriver) SendKey(key rune, action bootcommand.KeyAction) error {
-	return d.vncDriver.SendKey(key, action)
+	switch uint32(key) {
+	case WaitForStringStart:
+		d.waitString.Grow(1)
+		return nil
+	case WaitForStringEnd:
+		waitString := d.waitString.String()
+		d.waitString.Reset()
+		log.Printf("Waiting for '%s'...", waitString)
+
+		waitRegex, err := regexp.Compile(".*" + waitString + ".*")
+	    if err != nil {
+	        return err
+	    }
+
+		for {
+			frame, err := d.WaitForFramebufferUpdate()
+			if err != nil {
+				return err
+			}
+			if len(frame.Rectangles) == 0 {
+				return fmt.Errorf("Frame update did not have any rectangles")
+			}
+
+			w, h := int(d.vncClient.FrameBufferWidth), int(d.vncClient.FrameBufferHeight)
+			img := image.NewRGBA(image.Rect(0, 0, w, h))
+
+			for _, rect := range frame.Rectangles {
+				switch enc := rect.Enc.(type) {
+				case *DesktopSizePseudoEncoding:
+					continue
+				case *ZRLEEncoding:
+					// FIXME: Feed pixel data directly to image, instead of going via Colors
+					for i, c := range enc.Colors {
+						x, y := i%w, i/w
+						r, g, b := uint8(c.R), uint8(c.G), uint8(c.B)
+
+						img.Set(int(rect.X)+x, int(rect.Y)+y, color.RGBA{r, g, b, 255})
+					}
+				default:
+					return fmt.Errorf("VNC frame had unknown encoding %s", enc)
+				}
+			}
+
+			// FIXME: Pass image data directly to Vision without PNG encoding first
+			pngData := bytes.Buffer{}
+			pngEncoder := png.Encoder{CompressionLevel: png.NoCompression}
+			if err := pngEncoder.Encode(io.Writer(&pngData), img); err != nil {
+				return fmt.Errorf("Failed to encode frame as PNG: %s", err)
+			}
+
+			if d.config.PackerDebug {
+				ioutil.WriteFile(fmt.Sprintf("vnc-frame-%02d.png", debugFrameIndex), pngData.Bytes(), 0600)
+				debugFrameIndex++
+			}
+
+			var foundText = false
+			log.Printf("Looking for '%s'...", waitString)
+
+			objc.WithAutoreleasePool(func() {
+				imageRequest := vision.NewImageRequestHandlerWithDataOptions(pngData.Bytes(), nil)
+				textRecognizer := vision.NewRecognizeTextRequest()
+
+				imageRequest.PerformRequestsError([]vision.IRequest{textRecognizer}, unsafe.Pointer(&err))
+				if err != nil {
+					err = fmt.Errorf("Failed to perform image recognition request")
+					return
+				}
+
+				// Manually check that we have results, as otherwise we panic when converting
+				// an empty array to a slice.
+				results := objc.Call[foundation.Array](textRecognizer, objc.Sel("results"))
+				if results.Count() == 0 {
+					return
+				}
+
+				for _, observation := range textRecognizer.Results() {
+					textObservation := vision.RecognizedTextObservationFrom(observation.Ptr())
+					for _, candidate := range textObservation.TopCandidates(1) {
+						log.Printf("Observed '%s' with confidence %g", candidate.String(), candidate.Confidence())
+						if waitRegex.MatchString(candidate.String()) {
+							log.Printf("Found match for '%s'", waitString)
+							foundText = true
+							return
+						}
+					}
+				}
+			})
+
+			if err != nil {
+				return err
+			}
+
+			if foundText {
+				break
+			}
+		}
+
+		return nil
+	default:
+		if d.waitString.Cap() > 0 {
+			d.waitString.WriteRune(key)
+			return nil
+		} else {
+			return d.vncDriver.SendKey(key, action)
+		}
+	}
 }
 
 func (d *customDriver) SendSpecial(special string, action bootcommand.KeyAction) error {
@@ -263,6 +387,10 @@ func TypeBootCommandOverVNC(
 
 		return false
 	}
+
+	stringWaitRegex := regexp.MustCompile(`<wait\s*"([^"]+)">`)
+	command = stringWaitRegex.ReplaceAllString(command,
+		fmt.Sprintf(`%c${1}%c`, WaitForStringStart, WaitForStringEnd))
 
 	seq, err := bootcommand.GenerateExpressionSequence(command)
 	if err != nil {
