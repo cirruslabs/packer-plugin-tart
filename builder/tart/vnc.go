@@ -15,6 +15,9 @@ import (
 	"os"
 	"regexp"
 	"time"
+
+	"compress/zlib"
+	"encoding/binary"
 )
 
 var vncRegexp = regexp.MustCompile("vnc://.*:(.*)@(.*):([0-9]{1,5})")
@@ -101,6 +104,39 @@ func (*DesktopSizePseudoEncoding) Read(c *vnc.ClientConn, rect *vnc.Rectangle, r
 
 func (*DesktopSizePseudoEncoding) Type() int32 {
 	return -223 // RFC 6143 7.8.2
+}
+
+type ZRLEEncoding struct {
+	Colors []vnc.Color
+	reader *io.ReadCloser
+}
+
+func (ze *ZRLEEncoding) Read(c *vnc.ClientConn, rect *vnc.Rectangle, r io.Reader) (vnc.Encoding, error) {
+	// Skip length
+	if err := binary.Read(r, binary.BigEndian, new(uint32)); err != nil {
+		return nil, err
+	}
+
+	if ze.reader == nil {
+		// A single zlib stream is used for each RFB protocol connection,
+		// so we must re-use the zlib reader between each decode, as we
+		// can only read the zlib header once.
+		if reader, err := zlib.NewReader(r); err != nil {
+			return nil, err
+		} else {
+			ze.reader = &reader
+		}
+	}
+
+	if rawEnc, err := (&vnc.RawEncoding{}).Read(c, rect, *ze.reader); err != nil {
+		return nil, err
+	} else {
+		return &ZRLEEncoding{Colors: rawEnc.(*vnc.RawEncoding).Colors}, nil
+	}
+}
+
+func (*ZRLEEncoding) Type() int32 {
+	return 6 // RFC 6143 7.7.6
 }
 
 func TypeBootCommandOverVNC(
@@ -198,7 +234,7 @@ func TypeBootCommandOverVNC(
 	ui.Say("Connected to VNC server!")
 
 	vncClient.SetEncodings([]vnc.Encoding{
-		&vnc.RawEncoding{},
+		&ZRLEEncoding{},
 		&DesktopSizePseudoEncoding{},
 	})
 
