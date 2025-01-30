@@ -93,6 +93,10 @@ For more advanced examples, please refer to the [`example/` directory](https://g
 
 @include 'packer-plugin-sdk/bootcommand/BootConfig-not-required.mdx'
 
+*Note:*: If `boot_wait` is not specified the Tart builder will wait for the first
+frame from the VM, as an indication that the VM has booted and is ready to receive
+key presses.
+
 ### VNC configuration
 
 @include 'packer-plugin-sdk/bootcommand/VNCConfig.mdx'
