@@ -271,6 +271,28 @@ For more examples of various boot commands, see the sample projects from our
 <!-- End of code generated from the comments of the BootConfig struct in bootcommand/config.go; -->
 
 
+In addition to the `<waitXX>` command, Tart builder supports a custom `<wait 'string'>`
+command that uses computer vision to wait for the given string to appear in the VM's
+screen output. This string can be a simple word, a sentence or a regular expression.
+
+In JSON:
+
+```json
+"boot_command": [
+     "<wait 'hello'>",
+     "<wait '(foo|bar|baz)123'>"
+  ]
+```
+
+In HCL2:
+
+```hcl
+boot_command = [
+     "<wait 'hello'>",
+     "<wait '(foo|bar|baz)123'>"
+  ]
+```
+
 #### Optional:
 
 <!-- Code generated from the comments of the BootConfig struct in bootcommand/config.go; DO NOT EDIT MANUALLY -->
