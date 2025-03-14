@@ -2,7 +2,7 @@ module packer-plugin-tart
 
 go 1.23.0
 
-toolchain go1.24.1
+toolchain go1.23.1
 
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
