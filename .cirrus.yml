@@ -1,10 +1,14 @@
 task:
   name: Lint
 
-  container:
-    image: golangci/golangci-lint:latest
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-runner:sonoma
 
-  script: golangci-lint run -v --timeout 4m0s --out-format json > golangci.json
+  install_script:
+    - brew install golangci-lint
+
+  lint_script:
+    - golangci-lint run -v --timeout 4m0s --out-format json > golangci.json
 
   always:
     report_artifacts:
@@ -14,7 +18,11 @@ task:
 task:
   name: Build
 
-  container:
-    image: golang:latest
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-runner:sonoma
 
-  script: make build
+  install_script:
+    - brew install go
+
+  build_script:
+    - make build
