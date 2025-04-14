@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
-	github.com/diskfs/go-diskfs v1.5.2
+	github.com/diskfs/go-diskfs v1.6.0
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/hashicorp/packer-plugin-sdk v0.6.1
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
