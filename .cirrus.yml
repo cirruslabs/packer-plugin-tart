@@ -8,7 +8,7 @@ task:
     - brew install golangci-lint
 
   lint_script:
-    - golangci-lint run -v --timeout 4m0s --out-format json > golangci.json
+    - golangci-lint run -v --timeout 4m0s -output.json.path golangci.json
 
   always:
     report_artifacts:
