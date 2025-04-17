@@ -1,3 +1,5 @@
+version: 2
+
 run:
   timeout: 5m
 
@@ -24,8 +26,6 @@ linters:
 
     # Style linters that are total nuts.
     - wsl
-    - gofumpt
-    - goimports
     - funlen
 
     # Enough parallelism for now.
@@ -49,18 +49,12 @@ linters:
     # [1]: https://github.com/mgechev/revive/issues/244#issuecomment-560512162
     - revive
 
-    # Unfortunately too much false-positives, e.g. for a 0700 umask or number 10 when using strconv.FormatInt()
-    - gomnd
-
     # Needs package whitelists
     - depguard
 
     # Generates absolutely useless errors, e.g.
     # "string `.yml` has 3 occurrences, make it a constant"
     - goconst
-
-    # It's OK to not sort imports
-    - gci
 
     # It's OK to not initialize some struct fields
     - exhaustruct
@@ -78,13 +72,24 @@ linters:
 
     # Packer-plugin specific disables
     - forcetypeassert
-    - stylecheck
     - tagalign
     - lll
     - godot
     - nonamedreturns
     - gomoddirectives
     - ireturn
+
+    # We don't care about some of the errors
+    - errcheck
+
+  exclusions:
+    rules:
+      # It's OK to capitalize errors
+      - linters: staticcheck
+        text: "ST1005:"
+      # Explicitly naming embedded fields results in a more clear code
+      - linters: staticcheck
+        text: "QF1008:"
 
 issues:
   # Don't hide multiple issues that belong to one class since GitHub annotations can handle them all nicely.

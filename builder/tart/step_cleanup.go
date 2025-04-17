@@ -19,7 +19,7 @@ func (s *stepCleanVM) Cleanup(state multistep.StateBag) {
 	_, halted := state.GetOk(multistep.StateHalted)
 
 	// Only cleanup on cancellation
-	if !(cancelled || halted) {
+	if !cancelled && !halted {
 		return
 	}
 
