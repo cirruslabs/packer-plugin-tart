@@ -166,7 +166,7 @@ func typeBootCommandOverVNC(
 		}
 	}
 
-	ui.Say("Waiting for the VNC server credentials from Tart...")
+	ui.Say("Waiting for VNC server credentials from Tart...")
 
 	vncCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -201,7 +201,7 @@ func typeBootCommandOverVNC(
 	dialer := net.Dialer{}
 	netConn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%s", vncHost, vncPort))
 	if err != nil {
-		err := fmt.Errorf("Failed to connect to the Tart's VNC server: %s", err)
+		err := fmt.Errorf("Failed to connect to Tart's VNC server: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 
@@ -209,13 +209,15 @@ func typeBootCommandOverVNC(
 	}
 	defer netConn.Close()
 
+	serverMessageChannel := make(chan vnc.ServerMessage)
 	vncClient, err := vnc.Client(netConn, &vnc.ClientConfig{
 		Auth: []vnc.ClientAuth{
 			&vnc.PasswordAuth{Password: vncPassword},
 		},
+		ServerMessageCh: serverMessageChannel,
 	})
 	if err != nil {
-		err := fmt.Errorf("Failed to connect to the Tart's VNC server: %s", err)
+		err := fmt.Errorf("Failed to connect to Tart's VNC server: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 
@@ -223,18 +225,32 @@ func typeBootCommandOverVNC(
 	}
 	defer vncClient.Close()
 
-	ui.Say("Connected to the VNC!")
+	ui.Say("Connected to VNC server!")
+
+	vncClient.SetEncodings([]vnc.Encoding{
+		&ZlibEncoding{},
+		&DesktopSizePseudoEncoding{},
+	})
+
+	vncDriver := newCustomDriver(vncClient, serverMessageChannel, config, ctx)
 
 	if config.VNCConfig.BootWait > 0 {
 		message := fmt.Sprintf("Waiting %v after the VM has booted...", config.VNCConfig.BootWait)
 		ui.Say(message)
 		time.Sleep(config.VNCConfig.BootWait)
+	} else {
+		ui.Say(fmt.Sprintf("Waiting for first frame..."))
+		for i := 0; i < 2; i++ {
+			if err := vncDriver.WaitForFramebufferUpdate(); err != nil {
+				state.Put("error", err)
+				ui.Error(err.Error())
+				return false
+			}
+		}
 	}
 
-	message := fmt.Sprintf("Typing commands with key interval %v...", config.BootKeyInterval)
+	message := fmt.Sprintf("Typing commands with key interval %v...", vncDriver.KeyInterval())
 	ui.Say(message)
-
-	vncDriver := bootcommand.NewVNCDriver(vncClient, config.BootKeyInterval)
 
 	command, err := interpolate.Render(config.VNCConfig.FlatBootCommand(), &config.ctx)
 	if err != nil {
@@ -244,6 +260,10 @@ func typeBootCommandOverVNC(
 
 		return false
 	}
+
+	stringWaitRegex := regexp.MustCompile(`<wait\s*'([^']+)'>`)
+	command = stringWaitRegex.ReplaceAllString(command,
+		fmt.Sprintf(`%c${1}%c`, WaitForStringStart, WaitForStringEnd))
 
 	seq, err := bootcommand.GenerateExpressionSequence(command)
 	if err != nil {
