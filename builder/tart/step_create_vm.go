@@ -30,6 +30,10 @@ func (s *stepCreateVM) Run(ctx context.Context, state multistep.StateBag) multis
 		createArguments = append(createArguments, "--disk-size", strconv.Itoa(int(config.DiskSizeGb)))
 	}
 
+	if config.DiskFormat != "" && config.DiskFormat != "raw" {
+		createArguments = append(createArguments, "--disk-format", config.DiskFormat)
+	}
+
 	createArguments = append(createArguments, config.VMName)
 
 	if _, err := TartExec(ctx, ui, createArguments...); err != nil {
