@@ -13,10 +13,18 @@ import (
 type stepResize struct{}
 
 func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	_, diskChanged := state.GetOk(statekey.DiskChanged)
 	if !diskChanged {
+		return multistep.ActionContinue
+	}
+
+	// Skip in-guest disk resizing for ASIF disks
+	// ASIF disks should be resized using diskutil on the host, not in-guest
+	if config.DiskFormat == "asif" {
+		ui.Say("Skipping in-guest disk resize for ASIF disk format (should be handled by host-side diskutil)")
 		return multistep.ActionContinue
 	}
 

@@ -22,15 +22,20 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	diskImagePath := PathInTartHome("vms", config.VMName, "disk.img")
 
 	if config.DiskSizeGb > 0 {
-		sizeChanged, err := growDisk(config.DiskSizeGb, diskImagePath)
+		// Skip disk resizing for ASIF disks - they should be resized using diskutil
+		if config.DiskFormat == "asif" {
+			ui.Say("Skipping disk file resize for ASIF format (disk resizing should be handled by tart set --disk-size)")
+		} else {
+			sizeChanged, err := growDisk(config.DiskSizeGb, diskImagePath)
 
-		if err != nil {
-			ui.Error(err.Error())
-			return multistep.ActionHalt
-		}
+			if err != nil {
+				ui.Error(err.Error())
+				return multistep.ActionHalt
+			}
 
-		if sizeChanged {
-			state.Put(statekey.DiskChanged, true)
+			if sizeChanged {
+				state.Put(statekey.DiskChanged, true)
+			}
 		}
 	}
 
