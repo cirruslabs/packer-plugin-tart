@@ -194,9 +194,8 @@ func typeBootCommandOverVNC(
 	}
 
 	ui.Say("Retrieved VNC credentials, connecting...")
-	ui.Message(fmt.Sprintf(
-		"If you want to view the screen of the VM, connect via VNC with the password \"%s\" to\n"+
-			"vnc://%s:%s", vncPassword, vncHost, vncPort))
+	ui.Sayf("If you want to view the screen of the VM, connect via VNC with the password \"%s\" to\n"+
+		"vnc://%s:%s", vncPassword, vncHost, vncPort)
 
 	dialer := net.Dialer{}
 	netConn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%s", vncHost, vncPort))
