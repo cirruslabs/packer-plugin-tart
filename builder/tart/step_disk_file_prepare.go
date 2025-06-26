@@ -9,6 +9,7 @@ import (
 	"os"
 	"packer-plugin-tart/builder/tart/recoverypartition"
 	"packer-plugin-tart/builder/tart/statekey"
+	"strconv"
 )
 
 type stepDiskFilePrepare struct{}
@@ -24,7 +25,13 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	if config.DiskSizeGb > 0 {
 		// Skip disk resizing for ASIF disks - they should be resized using diskutil
 		if config.DiskFormat == "asif" {
-			ui.Say("Skipping disk file resize for ASIF format (disk resizing should be handled by tart set --disk-size)")
+			ui.Say("Resizing ASIF disk with Disk Utils")
+			resizeArguments := []string{"set", "--disk-size", strconv.Itoa(int(config.DiskSizeGb)), config.VMName}
+			if _, err := TartExec(ctx, ui, resizeArguments...); err != nil {
+				err := fmt.Errorf("Failed to resize a VM: %s", err)
+				state.Put("error", err)
+				return multistep.ActionHalt
+			}
 		} else {
 			sizeChanged, err := growDisk(config.DiskSizeGb, diskImagePath)
 
