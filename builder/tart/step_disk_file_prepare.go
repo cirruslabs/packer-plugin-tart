@@ -24,25 +24,11 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 
 	if config.DiskSizeGb > 0 {
 		// Skip disk resizing for ASIF disks - they should be resized using diskutil
-		if config.DiskFormat == "asif" {
-			ui.Say("Resizing ASIF disk with Disk Utils")
-			resizeArguments := []string{"set", "--disk-size", strconv.Itoa(int(config.DiskSizeGb)), config.VMName}
-			if _, err := TartExec(ctx, ui, resizeArguments...); err != nil {
-				err := fmt.Errorf("Failed to resize a VM: %s", err)
-				state.Put("error", err)
-				return multistep.ActionHalt
-			}
-		} else {
-			sizeChanged, err := growDisk(config.DiskSizeGb, diskImagePath)
-
-			if err != nil {
-				ui.Error(err.Error())
-				return multistep.ActionHalt
-			}
-
-			if sizeChanged {
-				state.Put(statekey.DiskChanged, true)
-			}
+		resizeArguments := []string{"set", "--disk-size", strconv.Itoa(int(config.DiskSizeGb)), config.VMName}
+		if _, err := TartExec(ctx, ui, resizeArguments...); err != nil {
+			err := fmt.Errorf("Failed to resize a VM: %s", err)
+			state.Put("error", err)
+			return multistep.ActionHalt
 		}
 	}
 
@@ -70,26 +56,6 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	}
 
 	return multistep.ActionContinue
-}
-
-func growDisk(diskSizeGb uint16, diskImagePath string) (bool, error) {
-	desiredSizeInBytes := int64(diskSizeGb) * 1_000_000_000
-
-	diskImageStat, err := os.Stat(diskImagePath)
-
-	if err != nil {
-		return false, err
-	}
-
-	if diskImageStat.Size() > desiredSizeInBytes {
-		return false, errors.New("Image disk is larger then desired! Only disk size increasing is supported! Can't shrink the disk ATM. :-(")
-	}
-
-	if diskImageStat.Size() == desiredSizeInBytes {
-		return false, nil
-	}
-
-	return true, os.Truncate(diskImagePath, desiredSizeInBytes)
 }
 
 // Cleanup stops the VM.

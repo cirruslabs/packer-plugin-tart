@@ -21,13 +21,6 @@ func (s *stepResize) Run(ctx context.Context, state multistep.StateBag) multiste
 		return multistep.ActionContinue
 	}
 
-	// Skip in-guest disk resizing for ASIF disks
-	// ASIF disks should be resized using diskutil on the host, not in-guest
-	if config.DiskFormat == "asif" {
-		ui.Say("Skipping in-guest disk resize for ASIF disk format (should be handled by host-side diskutil)")
-		return multistep.ActionContinue
-	}
-
 	communicator := state.Get("communicator").(packersdk.Communicator)
 	if communicator == nil {
 		return multistep.ActionContinue
