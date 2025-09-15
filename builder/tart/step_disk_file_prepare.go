@@ -2,14 +2,12 @@ package tart
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"packer-plugin-tart/builder/tart/recoverypartition"
+	"strconv"
+
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"os"
-	"packer-plugin-tart/builder/tart/recoverypartition"
-	"packer-plugin-tart/builder/tart/statekey"
-	"strconv"
 )
 
 type stepDiskFilePrepare struct{}
