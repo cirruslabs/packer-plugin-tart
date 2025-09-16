@@ -1,5 +1,5 @@
 env:
-  - CGO_ENABLED=0
+  - CGO_ENABLED=1
   - API_VERSION={{ if index .Env "API_VERSION"  }}{{ .Env.API_VERSION }}{{ else }}x5.0{{ end }}
 
 before:
