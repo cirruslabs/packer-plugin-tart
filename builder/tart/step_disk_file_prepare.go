@@ -2,13 +2,13 @@ package tart
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"os"
 	"packer-plugin-tart/builder/tart/recoverypartition"
 	"packer-plugin-tart/builder/tart/statekey"
+	"strconv"
+
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 type stepDiskFilePrepare struct{}
@@ -22,14 +22,21 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	diskImagePath := PathInTartHome("vms", config.VMName, "disk.img")
 
 	if config.DiskSizeGb > 0 {
-		sizeChanged, err := growDisk(config.DiskSizeGb, diskImagePath)
-
+		vmInfo, err := TartVMInfo(ctx, ui, config.VMName)
 		if err != nil {
-			ui.Error(err.Error())
+			state.Put("error", fmt.Errorf("Failed to retrieve VM's information: %w", err))
+
 			return multistep.ActionHalt
 		}
 
-		if sizeChanged {
+		_, err = TartExec(ctx, ui, "set", "--disk-size", strconv.Itoa(int(config.DiskSizeGb)), config.VMName)
+		if err != nil {
+			state.Put("error", fmt.Errorf("Failed to resize a VM: %w", err))
+
+			return multistep.ActionHalt
+		}
+
+		if int64(config.DiskSizeGb) != vmInfo.Disk {
 			state.Put(statekey.DiskChanged, true)
 		}
 	}
@@ -58,26 +65,6 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	}
 
 	return multistep.ActionContinue
-}
-
-func growDisk(diskSizeGb uint16, diskImagePath string) (bool, error) {
-	desiredSizeInBytes := int64(diskSizeGb) * 1_000_000_000
-
-	diskImageStat, err := os.Stat(diskImagePath)
-
-	if err != nil {
-		return false, err
-	}
-
-	if diskImageStat.Size() > desiredSizeInBytes {
-		return false, errors.New("Image disk is larger then desired! Only disk size increasing is supported! Can't shrink the disk ATM. :-(")
-	}
-
-	if diskImageStat.Size() == desiredSizeInBytes {
-		return false, nil
-	}
-
-	return true, os.Truncate(diskImagePath, desiredSizeInBytes)
 }
 
 // Cleanup stops the VM.

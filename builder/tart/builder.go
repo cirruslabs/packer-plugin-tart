@@ -38,6 +38,7 @@ type Config struct {
 	CpuCount          uint8         `mapstructure:"cpu_count"`
 	CreateGraceTime   time.Duration `mapstructure:"create_grace_time"`
 	DiskSizeGb        uint16        `mapstructure:"disk_size_gb"`
+	DiskFormat        string        `mapstructure:"disk_format"`
 	RecoveryPartition string        `mapstructure:"recovery_partition"`
 	Display           string        `mapstructure:"display"`
 	Headless          bool          `mapstructure:"headless"`
@@ -86,6 +87,16 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 				return nil, nil, fmt.Errorf("from_ipsw, from_iso, and vm_base_name are mutually exclusive")
 			}
 		}
+	}
+
+	// Set default disk format if not specified
+	if b.config.DiskFormat == "" {
+		b.config.DiskFormat = "raw"
+	}
+
+	// Validate disk format
+	if b.config.DiskFormat != "raw" && b.config.DiskFormat != "asif" {
+		return nil, nil, fmt.Errorf("disk_format must be either 'raw' or 'asif', got '%s'", b.config.DiskFormat)
 	}
 
 	if errs := b.config.CommunicatorConfig.Prepare(&b.config.ctx); len(errs) != 0 {
