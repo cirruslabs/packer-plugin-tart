@@ -22,7 +22,7 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	diskImagePath := PathInTartHome("vms", config.VMName, "disk.img")
 
 	if config.DiskSizeGb > 0 {
-		vmInfo, err := TartVMInfo(ctx, ui, config.VMName)
+		vmInfo, err := TartVMInfo(ctx, nil, config.VMName)
 		if err != nil {
 			state.Put("error", fmt.Errorf("Failed to retrieve VM's information: %w", err))
 
