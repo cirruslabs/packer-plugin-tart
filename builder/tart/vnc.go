@@ -6,19 +6,19 @@ package tart
 
 #import <stdlib.h>
 #import "vnc.mm"
-
 */
 import "C"
 
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
-	"github.com/mitchellh/go-vnc"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
+	"github.com/mitchellh/go-vnc"
 
 	"image"
 	"image/color"
@@ -35,6 +35,7 @@ type customDriver struct {
 	ctx                  context.Context
 	frameBuffer          *image.RGBA
 	waitString           strings.Builder
+	clickString          strings.Builder
 }
 
 func newCustomDriver(vncClient *vnc.ClientConn,
@@ -70,27 +71,45 @@ func (d *customDriver) KeyInterval() time.Duration {
 	return d.keyInterval
 }
 
-const WaitForStringStart uint32 = 0xE000
-const WaitForStringEnd uint32 = 0xE0001
+const (
+	WaitForStringStart rune = 0xE0000
+	WaitForStringEnd   rune = 0xE0001
+
+	ClickStringStart rune = 0xE0002
+	ClickStringEnd   rune = 0xE0003
+)
 
 func (d *customDriver) SendKey(key rune, action bootcommand.KeyAction) error {
-	switch uint32(key) {
+	switch key {
 	case WaitForStringStart:
 		d.waitString.Grow(1)
-		return nil
 	case WaitForStringEnd:
 		waitString := d.waitString.String()
 		d.waitString.Reset()
 
-		waitStringCStr := C.CString(waitString)
-		defer C.free(unsafe.Pointer(waitStringCStr))
-
 		for {
 			fmt.Fprintf(os.Stderr, "🔎 Looking for '%s'...\n", waitString)
-			if C.recognizeTextInFramebuffer(waitStringCStr,
-				unsafe.Pointer(&d.frameBuffer.Pix[0]),
-				C.int(d.frameBuffer.Bounds().Dx()),
-				C.int(d.frameBuffer.Bounds().Dy())) {
+			if FindTextCoordinates(d.frameBuffer, waitString) != nil {
+				break
+			}
+
+			if err := d.WaitForFramebufferUpdate(); err != nil {
+				return err
+			}
+		}
+	case ClickStringStart:
+		d.clickString.Grow(1)
+	case ClickStringEnd:
+		clickString := d.clickString.String()
+		d.clickString.Reset()
+
+		var rectangle *image.Rectangle
+
+		for {
+			fmt.Fprintf(os.Stderr, "🔎 Looking for '%s'...\n", clickString)
+
+			rectangle = FindTextCoordinates(d.frameBuffer, clickString)
+			if rectangle != nil {
 				break
 			}
 
@@ -99,15 +118,29 @@ func (d *customDriver) SendKey(key rune, action bootcommand.KeyAction) error {
 			}
 		}
 
-		return nil
+		centerX := (rectangle.Min.X + rectangle.Max.X) / 2
+		centerY := (rectangle.Min.Y + rectangle.Max.Y) / 2
+
+		fmt.Fprintf(os.Stderr, "🖱️ Clicking at '%s's center (%d, %d) ...\n",
+			clickString, centerX, centerY)
+
+		if err := d.vncClient.PointerEvent(vnc.ButtonLeft, uint16(centerX), uint16(centerY)); err != nil {
+			return err
+		}
 	default:
-		if d.waitString.Cap() > 0 {
+		switch {
+		case d.waitString.Cap() > 0:
 			d.waitString.WriteRune(key)
 			return nil
-		} else {
+		case d.clickString.Cap() > 0:
+			d.clickString.WriteRune(key)
+			return nil
+		default:
 			return d.vncDriver.SendKey(key, action)
 		}
 	}
+
+	return nil
 }
 
 func (d *customDriver) SendSpecial(special string, action bootcommand.KeyAction) error {
@@ -174,4 +207,32 @@ func (*DesktopSizePseudoEncoding) Read(c *vnc.ClientConn, rect *vnc.Rectangle, r
 
 func (*DesktopSizePseudoEncoding) Type() int32 {
 	return -223 // RFC 6143 7.8.2
+}
+
+func FindTextCoordinates(rgba *image.RGBA, s string) *image.Rectangle {
+	sC := C.CString(s)
+	defer C.free(unsafe.Pointer(sC))
+
+	rectangleC := (*C.struct_Rectangle)(C.calloc(1, C.size_t(unsafe.Sizeof(C.struct_Rectangle{}))))
+	defer C.free(unsafe.Pointer(rectangleC))
+
+	ok := C.recognizeTextInFramebuffer(sC, unsafe.Pointer(&rgba.Pix[0]),
+		C.int(rgba.Bounds().Dx()), C.int(rgba.Bounds().Dy()), rectangleC)
+
+	if ok {
+		width, height := float64(rgba.Bounds().Max.X), float64(rgba.Bounds().Max.Y)
+
+		return &image.Rectangle{
+			Min: image.Point{
+				X: int(float64(rectangleC.MinX) * width),
+				Y: int(float64(rectangleC.MinY) * height),
+			},
+			Max: image.Point{
+				X: int(float64(rectangleC.MaxX) * width),
+				Y: int(float64(rectangleC.MaxY) * height),
+			},
+		}
+	}
+
+	return nil
 }

@@ -5,18 +5,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/apparentlymart/go-cidr/cidr"
-	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"github.com/mitchellh/go-vnc"
 	"net"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/apparentlymart/go-cidr/cidr"
+	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	"github.com/mitchellh/go-vnc"
 )
 
 var ErrFailedToDetectHostIP = errors.New("failed to detect host IP")
@@ -260,6 +261,10 @@ func typeBootCommandOverVNC(
 	stringWaitRegex := regexp.MustCompile(`<wait\s*'(.+?)'>`)
 	command = stringWaitRegex.ReplaceAllString(command,
 		fmt.Sprintf(`%c${1}%c`, WaitForStringStart, WaitForStringEnd))
+
+	stringClickRegex := regexp.MustCompile(`<click\s*'(.+?)'>`)
+	command = stringClickRegex.ReplaceAllString(command,
+		fmt.Sprintf(`%c${1}%c`, ClickStringStart, ClickStringEnd))
 
 	seq, err := bootcommand.GenerateExpressionSequence(command)
 	if err != nil {

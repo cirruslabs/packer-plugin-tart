@@ -3,8 +3,20 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <Vision/Vision.h>
 
-bool recognizeTextInFramebuffer(const char* text, void* framebuffer, int width, int height)
-{
+struct Rectangle {
+    double MinX;
+    double MinY;
+    double MaxX;
+    double MaxY;
+};
+
+bool recognizeTextInFramebuffer(
+  const char *text,
+  void *framebuffer,
+  int width,
+  int height,
+  struct Rectangle *output
+) {
     @autoreleasepool {
         // Prepare regular expression for needle
         NSError *error = nil;
@@ -47,8 +59,39 @@ bool recognizeTextInFramebuffer(const char* text, void* framebuffer, int width, 
                 fprintf(stderr, "💬 Observed '%s' with confidence %f\n",
                     candidate.string.UTF8String, candidate.confidence);
                 NSRange range = NSMakeRange(0, candidate.string.length);
-                if ([regex matchesInString:candidate.string options:0 range:range].count > 0)
+                if ([regex matchesInString:candidate.string options:0 range:range].count > 0) {
+                    VNRectangleObservation *rect = [candidate boundingBoxForRange:range error:&error];
+                    if (error || !rect) {
+                      fprintf(stderr, "⚠️ Failed to perform image recognition request: %s\n",
+                          error.localizedDescription.UTF8String);
+                      return false;
+                    }
+
+                    output->MinX = fmin(
+                      fmin(rect.topLeft.x, rect.topRight.x),
+                      fmin(rect.bottomLeft.x, rect.bottomRight.x)
+                    );
+                    output->MaxX = fmax(
+                      fmax(rect.topLeft.x, rect.topRight.x),
+                      fmax(rect.bottomLeft.x, rect.bottomRight.x)
+                    );
+
+                    // Flip the axis, because:
+                    //
+                    // >OCR results are also reported in normalized coordinates, but with the origin at lower left.
+                    //
+                    // https://rethunk.medium.com/coordinate-transforms-in-ios-using-swift-part-1-the-l-triangle-c8204177a7e2
+                    output->MinY = fmin(
+                      fmin(1.0 - rect.topLeft.y, 1.0 - rect.topRight.y),
+                      fmin(1.0 - rect.bottomLeft.y, 1.0 - rect.bottomRight.y)
+                    );
+                    output->MaxY = fmax(
+                      fmax(1.0 - rect.topLeft.y, 1.0 - rect.topRight.y),
+                      fmax(1.0 - rect.bottomLeft.y, 1.0 - rect.bottomRight.y)
+                    );
+
                     return true;
+                }
             }
         }
     }
