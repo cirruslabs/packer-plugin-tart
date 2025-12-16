@@ -1,8 +1,8 @@
+macos_instance:
+  image: ghcr.io/cirruslabs/macos-runner:tahoe
+
 task:
   name: Lint
-
-  macos_instance:
-    image: ghcr.io/cirruslabs/macos-runner:sonoma
 
   install_script:
     - brew install golangci-lint
@@ -16,10 +16,16 @@ task:
       format: golangci
 
 task:
-  name: Build
+  name: Test
 
-  macos_instance:
-    image: ghcr.io/cirruslabs/macos-runner:sonoma
+  install_script:
+    - brew install go
+
+  test_script:
+    - go test -v ./...
+
+task:
+  name: Build
 
   install_script:
     - brew install go
