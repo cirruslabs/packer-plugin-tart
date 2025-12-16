@@ -272,9 +272,14 @@ For more examples of various boot commands, see the sample projects from our
 <!-- End of code generated from the comments of the BootConfig struct in bootcommand/config.go; -->
 
 
-In addition to the `<waitXX>` command, Tart builder supports a custom `<wait 'string'>`
-command that uses computer vision to wait for the given string to appear in the VM's
-screen output. This string can be a simple word, a sentence or a regular expression.
+Additionally, Tart builder supports the following custom commands that utilize computer vision:
+
+* `<wait 'string'>` — waits for the given string to appear in the VM's screen output
+    * the `string` can be a simple word, a sentence or a regular expression
+    * alternative to `<waitXX>` command with large values
+* `<click 'string'>` — waits for the given string to appear in the VM's screen output, determines its bounding box and clicks in the center of it
+    * the `string` can be a simple word, a sentence or a regular expression
+    * alternative to multiple `<tab>` commands, and sometimes the only way to make a specific element on the screen active
 
 In JSON:
 
