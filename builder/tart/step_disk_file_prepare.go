@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"packer-plugin-tart/builder/tart/recoverypartition"
-	"packer-plugin-tart/builder/tart/statekey"
 	"strconv"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -22,22 +21,11 @@ func (s *stepDiskFilePrepare) Run(ctx context.Context, state multistep.StateBag)
 	diskImagePath := PathInTartHome("vms", config.VMName, "disk.img")
 
 	if config.DiskSizeGb > 0 {
-		vmInfo, err := TartVMInfo(ctx, nil, config.VMName)
-		if err != nil {
-			state.Put("error", fmt.Errorf("Failed to retrieve VM's information: %w", err))
-
-			return multistep.ActionHalt
-		}
-
-		_, err = TartExec(ctx, ui, "set", "--disk-size", strconv.Itoa(int(config.DiskSizeGb)), config.VMName)
+		_, err := TartExec(ctx, ui, "set", "--disk-size", strconv.Itoa(int(config.DiskSizeGb)), config.VMName)
 		if err != nil {
 			state.Put("error", fmt.Errorf("Failed to resize a VM: %w", err))
 
 			return multistep.ActionHalt
-		}
-
-		if int64(config.DiskSizeGb) != vmInfo.Disk {
-			state.Put(statekey.DiskChanged, true)
 		}
 	}
 

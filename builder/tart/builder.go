@@ -99,6 +99,12 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 		return nil, nil, fmt.Errorf("disk_format must be either 'raw' or 'asif', got '%s'", b.config.DiskFormat)
 	}
 
+	if b.config.DiskFormat == "asif" && b.config.RecoveryPartition != "keep" {
+		return nil, nil, fmt.Errorf("please set the \"recovery_partition\" " +
+			"to \"keep\", as \"delete\" (the default) and \"relocate\" are not supported " +
+			"for ASIF disks")
+	}
+
 	if errs := b.config.CommunicatorConfig.Prepare(&b.config.ctx); len(errs) != 0 {
 		return nil, nil, packer.MultiErrorAppend(nil, errs...)
 	}
