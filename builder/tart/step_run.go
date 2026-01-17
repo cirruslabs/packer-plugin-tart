@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -59,8 +60,9 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	}
 	cmd := exec.CommandContext(ctx, tartCommand, runArgs...)
 	stdout := bytes.NewBufferString("")
+	stderr := bytes.NewBufferString("")
 	cmd.Stdout = stdout
-	cmd.Stderr = uiWriter{ui: ui}
+	cmd.Stderr = io.MultiWriter(stderr, uiWriter{ui: ui})
 
 	// Prevent the Tart from opening the Screen Sharing
 	// window connected to the VNC server we're starting
@@ -81,7 +83,7 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	ui.Say("Successfully started the virtual machine...")
 
 	if len(config.BootCommand) > 0 && !config.DisableVNC {
-		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout) {
+		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout, stderr) {
 			return multistep.ActionHalt
 		}
 	}
@@ -140,9 +142,9 @@ func typeBootCommandOverVNC(
 	config *Config,
 	ui packersdk.Ui,
 	tartRunStdout *bytes.Buffer,
+	tartRunStderr *bytes.Buffer,
 ) bool {
 	ui.Say("Typing boot commands over VNC...")
-
 	if config.HTTPDir != "" || len(config.HTTPContent) != 0 {
 		ui.Say("Detecting host IP...")
 
@@ -177,7 +179,8 @@ func typeBootCommandOverVNC(
 	var vncPort string
 
 	for {
-		matches := vncRegexp.FindStringSubmatch(tartRunStdout.String())
+		combinedOutput := tartRunStdout.String() + "\n" + tartRunStderr.String()
+		matches := vncRegexp.FindStringSubmatch(combinedOutput)
 		if len(matches) == 1+vncRegexp.NumSubexp() {
 			vncPassword = matches[1]
 			vncHost = matches[2]
@@ -188,6 +191,14 @@ func typeBootCommandOverVNC(
 
 		select {
 		case <-vncCtx.Done():
+			err := fmt.Errorf(
+				"Timed out waiting for VNC server credentials from Tart.\n"+
+					"--- Tart stdout (tail) ---\n%s\n--- Tart stderr (tail) ---\n%s",
+				tailString(tartRunStdout.String(), 8192),
+				tailString(tartRunStderr.String(), 8192),
+			)
+			state.Put("error", err)
+			ui.Error(err.Error())
 			return false
 		case <-time.After(time.Second):
 			// continue
@@ -286,6 +297,16 @@ func typeBootCommandOverVNC(
 	ui.Say("Done typing commands!")
 
 	return true
+}
+
+func tailString(s string, maxBytes int) string {
+	if maxBytes <= 0 {
+		return ""
+	}
+	if len(s) <= maxBytes {
+		return strings.TrimSpace(s)
+	}
+	return strings.TrimSpace(s[len(s)-maxBytes:])
 }
 
 func detectHostIP(ctx context.Context, config *Config) (string, error) {
