@@ -272,8 +272,10 @@ For more examples of various boot commands, see the sample projects from our
 <!-- End of code generated from the comments of the BootConfig struct in bootcommand/config.go; -->
 
 
-Additionally, Tart builder supports the following custom commands that utilize computer vision:
+Additionally, Tart builder supports the following custom commands:
 
+* `<leftCommand> <rightCommand>` - Simulates pressing the ⌘ key.
+* `<leftOption> <rightOption>` - Simulates pressing the ⌥ key.
 * `<wait 'string'>` — waits for the given string to appear in the VM's screen output
     * the `string` can be a simple word, a sentence or a regular expression
     * alternative to `<waitXX>` command with large values

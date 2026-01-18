@@ -266,6 +266,20 @@ func typeBootCommandOverVNC(
 	command = stringClickRegex.ReplaceAllString(command,
 		fmt.Sprintf(`%c${1}%c`, ClickStringStart, ClickStringEnd))
 
+	// Waiting for https://github.com/hashicorp/packer-plugin-sdk/pull/293
+	leftCommandRegex := regexp.MustCompile(`<leftCommand(On|Off)?>`)
+	command = leftCommandRegex.ReplaceAllString(command,
+		fmt.Sprintf(`<%c${1}>`, LeftCommand))
+	rightCommandRegex := regexp.MustCompile(`<rightCommand(On|Off)?>`)
+	command = rightCommandRegex.ReplaceAllString(command,
+		fmt.Sprintf(`<%c${1}>`, RightCommand))
+	leftOptionRegex := regexp.MustCompile(`<leftOption(On|Off)?>`)
+	command = leftOptionRegex.ReplaceAllString(command,
+		fmt.Sprintf(`<%c${1}>`, LeftOption))
+	rightOptionRegex := regexp.MustCompile(`<rightOption(On|Off)?>`)
+	command = rightOptionRegex.ReplaceAllString(command,
+		fmt.Sprintf(`<%c${1}>`, RightOption))
+
 	seq, err := bootcommand.GenerateExpressionSequence(command)
 	if err != nil {
 		err := fmt.Errorf("Failed to parse the boot command: %s", err)
