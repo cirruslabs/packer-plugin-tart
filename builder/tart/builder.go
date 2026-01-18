@@ -145,7 +145,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 		steps = append(steps, new(stepRun))
 	}
 
-	if !b.config.Recovery && communicatorConfigured {
+	if communicatorConfigured {
 		steps = append(steps,
 			&communicator.StepSSHKeyGen{
 				CommConf:            &b.config.CommunicatorConfig,
