@@ -90,8 +90,10 @@ For more advanced examples, please refer to the [`example/` directory](https://g
 
 @include 'packer-plugin-sdk/bootcommand/BootConfig.mdx'
 
-Additionally, Tart builder supports the following custom commands that utilize computer vision:
+Additionally, Tart builder supports the following custom commands:
 
+* `<leftCommand> <rightCommand>` - Simulates pressing the ⌘ key.
+* `<leftOption> <rightOption>` - Simulates pressing the ⌥ key.
 * `<wait 'string'>` — waits for the given string to appear in the VM's screen output
     * the `string` can be a simple word, a sentence or a regular expression
     * alternative to `<waitXX>` command with large values

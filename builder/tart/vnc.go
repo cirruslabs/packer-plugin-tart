@@ -77,6 +77,11 @@ const (
 
 	ClickStringStart rune = 0xE0002
 	ClickStringEnd   rune = 0xE0003
+
+	LeftCommand  rune = 0xFFE9
+	RightCommand rune = 0xFFEA
+	LeftOption   rune = 0xFFE7
+	RightOption  rune = 0xFFE8
 )
 
 func (d *customDriver) SendKey(key rune, action bootcommand.KeyAction) error {
