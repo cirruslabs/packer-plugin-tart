@@ -2,7 +2,7 @@ package tart
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -12,9 +12,8 @@ func TartMachineIP(ctx context.Context, vmName string, ipExtraArgs []string) (st
 		if err != nil {
 			return "", err
 		}
-		out = strings.TrimSpace(out)
 		if out == "" {
-			return "", errors.New("tart ip returned empty output")
+			return "", fmt.Errorf("tart ip returned empty output (args=%s)", strings.Join(args, " "))
 		}
 		return out, nil
 	}
@@ -33,12 +32,8 @@ func TartMachineIP(ctx context.Context, vmName string, ipExtraArgs []string) (st
 		{"ip", "--wait", "1", "--resolver", "arp", vmName},
 	}
 	for _, args := range probes {
-		out, err := TartExec(ctx, nil, args...)
-		if err != nil {
-			continue
-		}
-		out = strings.TrimSpace(out)
-		if out != "" {
+		out, err := run(args...)
+		if err == nil {
 			return out, nil
 		}
 	}
