@@ -113,6 +113,17 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 }
 
 func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
+	// Set up cancelable build context
+	ctx, cancelBuild := context.WithCancel(ctx)
+
+	// Setup the state bag and initial state for the steps
+	state := new(multistep.BasicStateBag)
+	state.Put("config", &b.config)
+	state.Put("debug", b.config.PackerDebug)
+	state.Put("hook", hook)
+	state.Put("ui", ui)
+	state.Put("cancel-build", cancelBuild)
+
 	steps := []multistep.Step{
 		new(stepCleanVM), // cleanup the VM if the build is cancelled or halted
 	}
@@ -162,13 +173,6 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 			&commonsteps.StepProvision{},
 		)
 	}
-
-	// Setup the state bag and initial state for the steps
-	state := new(multistep.BasicStateBag)
-	state.Put("config", &b.config)
-	state.Put("debug", b.config.PackerDebug)
-	state.Put("hook", hook)
-	state.Put("ui", ui)
 
 	// Run
 	b.runner = commonsteps.NewRunnerWithPauseFn(steps, b.config.PackerConfig, ui, state)

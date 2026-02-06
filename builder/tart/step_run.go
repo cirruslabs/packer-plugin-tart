@@ -80,6 +80,40 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 	ui.Say("Successfully started the virtual machine...")
 
+	// Handle VM termination during boot commands or provisioning,
+	// in which case we want to cancel the build instead of hanging
+	// around in the packer plugin until timeout.
+	go func() {
+		err := cmd.Wait()
+		cancelBuild, ok := state.Get("cancel-build").(context.CancelFunc)
+		if !ok {
+			return // Don't treat our own cleanup as a failure
+		}
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			if err != nil {
+				// Termination via e.g. kill -9
+				ui.Error(fmt.Sprintf("VM terminated with error: %s", err))
+				cancelBuild()
+			} else if strings.Contains(stdout.String(), "Stopping VM...") {
+				// User initiated termination by quitting Tart,
+				// for example via Cmd+Q or closing the window.
+				ui.Error("VM terminated by user action")
+				cancelBuild()
+			} else if strings.Contains(stdout.String(), //nolint:staticcheck
+				"guest has stopped the virtual machine") {
+				// Boot commands or provisioning initiated termination,
+				// for example by issuing 'shutdown -t now', or via UI,
+				// and then issued a wait, to let the OS fully shut down
+				// on its own, instead of the packer plugin tearing down
+				// the VM after boot commands were done, in which case
+				// we assume the user knows what they are doing.
+			}
+		}
+	}()
+
 	if len(config.BootCommand) > 0 && !config.DisableVNC {
 		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout) {
 			return multistep.ActionHalt
@@ -103,9 +137,13 @@ func (s *stepRun) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 	cmd := state.Get("tart-cmd").(*exec.Cmd)
-	if cmd == nil {
+	if cmd == nil || cmd.ProcessState != nil {
 		return // Nothing to shut down
 	}
+
+	// Avoid cancellation logic when we explicitly
+	// shut down the VM.
+	state.Put("cancel-build", nil)
 
 	communicator := state.Get("communicator")
 	if communicator != nil {
