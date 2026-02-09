@@ -157,12 +157,14 @@ func (d *customDriver) Flush() error {
 }
 
 func (d *customDriver) WaitForFramebufferUpdate() error {
+	incremental := true
 
 	for {
 		w, h := d.vncClient.FrameBufferWidth, d.vncClient.FrameBufferHeight
-		fmt.Fprintf(os.Stderr, "📡 Requesting frame buffer update for %dx%d\n", w, h)
+		fmt.Fprintf(os.Stderr, "📡 Requesting %s frame buffer update for %dx%d\n",
+			map[bool]string{true: "incremental", false: "full"}[incremental], w, h)
 
-		if err := d.vncClient.FramebufferUpdateRequest(true, 0, 0, w, h); err != nil {
+		if err := d.vncClient.FramebufferUpdateRequest(incremental, 0, 0, w, h); err != nil {
 			return err
 		}
 
@@ -172,6 +174,8 @@ func (d *customDriver) WaitForFramebufferUpdate() error {
 				if len(framebufferUpdateMessage.Rectangles) == 0 {
 					return fmt.Errorf("⚠️ Frame update did not have any rectangles")
 				}
+				fmt.Fprintf(os.Stderr, "🖼️ New framebuffer update with %d rectangles\n",
+					len(framebufferUpdateMessage.Rectangles))
 
 				for _, rect := range framebufferUpdateMessage.Rectangles {
 					switch encoding := rect.Enc.(type) {
@@ -196,6 +200,32 @@ func (d *customDriver) WaitForFramebufferUpdate() error {
 				fmt.Fprintln(os.Stderr, "⚠️ Ignoring unknown message type", msg.Type(), msg)
 				continue
 			}
+		case <-time.After(30 * time.Second):
+			fmt.Fprintf(os.Stderr, "⏱️ Framebuffer update timed out after 30s. ")
+			// The built-in VNC server in Virtualization.framework will sometimes
+			// fail to deliver a framebuffer update, even though the VM view shows
+			// new content.
+			if (incremental) {
+				// As a first step, we try a full update, which according to
+				// RFC 6143 7.5.3 should result in the server sending the entire
+				// contents of the specified area as soon as possible.
+				fmt.Fprintf(os.Stderr, "Switching to full update\n")
+				incremental = false
+			} else {
+				// However even full updates may in some cases fail to trigger
+				// an update from the VZ VNC server. As a second step, we move
+				// the mouse, which should result in an update (as long as the
+				// VM shows a local cursor).
+				fmt.Fprintf(os.Stderr, "Moving mouse to trigger update\n")
+				if err := d.vncClient.PointerEvent(0, w-1, 0); err != nil {
+					return err
+				}
+				time.Sleep(1 * time.Second)
+				if err := d.vncClient.PointerEvent(0, 0, 0); err != nil {
+					return err
+				}
+			}
+			continue
 		case <-d.ctx.Done():
 			return d.ctx.Err()
 		}
