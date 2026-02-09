@@ -22,9 +22,12 @@ import (
 
 	"image"
 	"image/color"
+	"image/png"
 
 	"unsafe"
 )
+
+var debugVNC = os.Getenv("PACKER_TART_DEBUG_VNC_FRAMEBUFFER_UPDATES") != ""
 
 type customDriver struct {
 	vncClient            *vnc.ClientConn
@@ -194,6 +197,19 @@ func (d *customDriver) WaitForFramebufferUpdate() error {
 						return fmt.Errorf("⚠️ Frame had unknown encoding %s", encoding)
 					}
 				}
+
+				if debugVNC {
+					file, err := os.Create("framebuffer.png")
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "⚠️ Failed to create framebuffer file: %v\n", err)
+					} else {
+						if err := png.Encode(file, d.frameBuffer); err != nil {
+							fmt.Fprintf(os.Stderr, "⚠️ Failed to encode framebuffer: %v\n", err)
+						}
+						_ = file.Close()
+					}
+				}
+
 				return nil
 			} else {
 				// Ignore messages we didn't ask for
