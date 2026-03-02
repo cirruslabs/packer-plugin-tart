@@ -5,7 +5,7 @@ to create custom macOS images. For the full list of available features for this 
 
 > [!IMPORTANT]
 >
-> **macOS 15 (Sequoia) and later**
+> **macOS 15 (Sequoia) or later**
 >
 > In case you've upgraded and encountering an issue below:
 >
