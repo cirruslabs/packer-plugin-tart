@@ -15,11 +15,16 @@ to create custom macOS images. For the full list of available features for this 
 >
 > This is likely related to the [newly introduced "Local Network" permission](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy) on macOS Sequoia and the fact that GitLab Runner's binary might have no `LC_UUID` identifier, which is critical for the local network privacy mechanism.
 >
-> We've already [submitted a fix to Packer](https://github.com/hashicorp/packer/pull/13214), but the next release is planned for Jan, 2025.
+> Make sure you're running the [latest version of Packer](https://developer.hashicorp.com/packer/install) first.
 >
-> For now, you can use a [nightly version](https://github.com/hashicorp/packer/releases/tag/nightly) of Packer.
+> If the issue persists, try [setting the local network privacy preferences](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy#macOS-considerations) so that all [IPv4 private address space](https://datatracker.ietf.org/doc/html/rfc1918#section-3) that could potentially be used for VMs is excluded:
 >
-> We have [a tracking issue](https://github.com/cirruslabs/packer-plugin-tart/issues/79) for this, so don't hesitate to ask any questions and subscribe to get updates.
+> ```shell
+> sudo defaults write com.apple.network.local-network AllowedEthernetLocalNetworkAddresses -array "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16"
+> sudo defaults write com.apple.network.local-network AllowedWiFiLocalNetworkAddresses -array "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16"
+> ```
+>
+> ...and then reboot.
 
 ## Installation
 
