@@ -3,16 +3,17 @@ package recoverypartition_test
 import (
 	"bufio"
 	"bytes"
-	"github.com/diskfs/go-diskfs"
-	"github.com/diskfs/go-diskfs/partition/gpt"
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/hashicorp/packer-plugin-sdk/packer"
-	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"packer-plugin-tart/builder/tart/recoverypartition"
 	"path/filepath"
 	"testing"
+
+	"github.com/diskfs/go-diskfs"
+	"github.com/diskfs/go-diskfs/partition/gpt"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRelocate(t *testing.T) {
@@ -38,12 +39,14 @@ func TestRelocate(t *testing.T) {
 
 	// Partition our disk as GPT with a macOS recovery partition
 	firstPartition := &gpt.Partition{
+		Index: 1,
 		Start: 34,
 		Size:  partitionSizeBytes,
 		Type:  gpt.AppleAPFS,
 		Name:  "Doesn't matter",
 	}
 	secondPartition := &gpt.Partition{
+		Index: 2,
 		Start: 34 + partitionSizeSectors,
 		Size:  partitionSizeBytes,
 		Type:  gpt.AppleAPFS,

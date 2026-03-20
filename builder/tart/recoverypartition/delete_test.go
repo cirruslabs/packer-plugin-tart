@@ -1,15 +1,16 @@
 package recoverypartition_test
 
 import (
+	"os"
+	"packer-plugin-tart/builder/tart/recoverypartition"
+	"path/filepath"
+	"testing"
+
 	"github.com/diskfs/go-diskfs"
 	"github.com/diskfs/go-diskfs/partition/gpt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/stretchr/testify/require"
-	"os"
-	"packer-plugin-tart/builder/tart/recoverypartition"
-	"path/filepath"
-	"testing"
 )
 
 func TestDelete(t *testing.T) {
@@ -29,12 +30,14 @@ func TestDelete(t *testing.T) {
 	const partitionSizeBytes = partitionSizeSectors * sectorSizeBytes
 
 	firstPartition := &gpt.Partition{
+		Index: 1,
 		Start: 34,
 		Size:  partitionSizeBytes,
 		Type:  gpt.AppleAPFS,
 		Name:  "Doesn't matter",
 	}
 	secondPartition := &gpt.Partition{
+		Index: 2,
 		Start: 34 + partitionSizeSectors,
 		Size:  partitionSizeBytes,
 		Type:  gpt.AppleAPFS,
