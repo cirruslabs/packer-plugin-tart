@@ -1,10 +1,10 @@
 module packer-plugin-tart
 
-go 1.25.3
+go 1.25.7
 
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
-	github.com/diskfs/go-diskfs v1.7.0
+	github.com/diskfs/go-diskfs v1.8.0
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/packer-plugin-sdk v0.6.6
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
