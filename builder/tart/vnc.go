@@ -135,6 +135,10 @@ func (d *customDriver) SendKey(key rune, action bootcommand.KeyAction) error {
 		if err := d.vncClient.PointerEvent(vnc.ButtonLeft, uint16(centerX), uint16(centerY)); err != nil {
 			return err
 		}
+		time.Sleep(100 * time.Millisecond)
+		if err := d.vncClient.PointerEvent(0, uint16(centerX), uint16(centerY)); err != nil {
+			return err
+		}
 	default:
 		switch {
 		case d.waitString.Cap() > 0:
