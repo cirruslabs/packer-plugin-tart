@@ -62,6 +62,8 @@ For more advanced examples, please refer to the [`example/` directory](https://g
 - `rosetta` (string) - Whether to enable Rosetta support of a Linux guest VM. Useful for running non-arm64 binaries in the guest VM. A common used value is `rosetta`, for further details and explanation run `tart run --help`.
 - `run_extra_args` (list(string)) - Extra arguments to pass to `tart run` command. For example, you can enable bridged networking by specifying `--net-bridged=en0`.
 - `ip_extra_args` (list(string)) - Extra arguments to pass to `tart ip` command. For example, you can use a different resolver in case of bridged network by specifying `--resolver=arp`.
+- `vnc_recording_dir` (string) - Directory where PNG snapshots of the VM screen should be written. When set, the builder connects to Tart's `--vnc-experimental` server during `tart run`, records the initial setup/provisioning session, and only writes a new snapshot when the framebuffer changes. Existing contents of this directory are removed when recording starts, and snapshots from the current run are preserved if the build fails. Cannot be used with `disable_vnc`.
+- `vnc_recording_interval` (duration string | ex: "1s") - How often to check the VNC framebuffer for changes when `vnc_recording_dir` is set. Defaults to `"1s"`.
 - `vm_base_name` (string) - The name of the VM to be used for the initial cloning. Can be either a local VM or a remote VM that will be pulled from a registry. Mutually exclusive with `from_ipsw` and `from_iso`.
 
 ### SSH connection configuration
