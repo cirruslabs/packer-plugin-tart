@@ -12,6 +12,7 @@ import "C"
 import (
 	"context"
 	"fmt"
+	"image"
 	"io"
 	"os"
 	"strings"
@@ -20,32 +21,20 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	"github.com/mitchellh/go-vnc"
 
-	"image"
-	"image/color"
-	"image/png"
-
 	"unsafe"
 )
 
-var debugVNC = os.Getenv("PACKER_TART_DEBUG_VNC_FRAMEBUFFER_UPDATES") != ""
-
 type customDriver struct {
-	vncClient            *vnc.ClientConn
-	serverMessageChannel chan vnc.ServerMessage
-	config               *Config
-	vncDriver            bootcommand.BCDriver
-	keyInterval          time.Duration
-	ctx                  context.Context
-	frameBuffer          *image.RGBA
-	waitString           strings.Builder
-	clickString          strings.Builder
+	vncClient   *vnc.ClientConn
+	session     *vncSession
+	vncDriver   bootcommand.BCDriver
+	keyInterval time.Duration
+	ctx         context.Context
+	waitString  strings.Builder
+	clickString strings.Builder
 }
 
-func newCustomDriver(vncClient *vnc.ClientConn,
-	serverMessageChannel chan vnc.ServerMessage,
-	config *Config,
-	ctx context.Context) *customDriver {
-
+func newCustomDriver(session *vncSession, config *Config, ctx context.Context) *customDriver {
 	// Resolve key interval manually so we can accurately report it back
 	keyInterval := bootcommand.PackerKeyDefault
 	if delay, err := time.ParseDuration(os.Getenv(bootcommand.PackerKeyEnv)); err == nil {
@@ -55,16 +44,12 @@ func newCustomDriver(vncClient *vnc.ClientConn,
 		keyInterval = config.BootKeyInterval
 	}
 
-	w, h := int(vncClient.FrameBufferWidth), int(vncClient.FrameBufferHeight)
-
 	d := &customDriver{
-		vncClient:            vncClient,
-		serverMessageChannel: serverMessageChannel,
-		config:               config,
-		vncDriver:            bootcommand.NewVNCDriver(vncClient, keyInterval),
-		keyInterval:          keyInterval,
-		ctx:                  ctx,
-		frameBuffer:          image.NewRGBA(image.Rect(0, 0, w, h)),
+		vncClient:   session.vncClient,
+		session:     session,
+		vncDriver:   bootcommand.NewVNCDriver(session.vncClient, keyInterval),
+		keyInterval: keyInterval,
+		ctx:         ctx,
 	}
 
 	return d
@@ -97,7 +82,7 @@ func (d *customDriver) SendKey(key rune, action bootcommand.KeyAction) error {
 
 		for {
 			fmt.Fprintf(os.Stderr, "🔎 Looking for '%s'...\n", waitString)
-			if FindTextCoordinates(d.frameBuffer, waitString) != nil {
+			if FindTextCoordinates(d.session.Snapshot(), waitString) != nil {
 				break
 			}
 
@@ -116,7 +101,7 @@ func (d *customDriver) SendKey(key rune, action bootcommand.KeyAction) error {
 		for {
 			fmt.Fprintf(os.Stderr, "🔎 Looking for '%s'...\n", clickString)
 
-			rectangle = FindTextCoordinates(d.frameBuffer, clickString)
+			rectangle = FindTextCoordinates(d.session.Snapshot(), clickString)
 			if rectangle != nil {
 				break
 			}
@@ -160,92 +145,7 @@ func (d *customDriver) Flush() error {
 }
 
 func (d *customDriver) WaitForFramebufferUpdate() error {
-	incremental := true
-
-	for {
-		w, h := d.vncClient.FrameBufferWidth, d.vncClient.FrameBufferHeight
-		fmt.Fprintf(os.Stderr, "📡 Requesting %s frame buffer update for %dx%d\n",
-			map[bool]string{true: "incremental", false: "full"}[incremental], w, h)
-
-		if err := d.vncClient.FramebufferUpdateRequest(incremental, 0, 0, w, h); err != nil {
-			return err
-		}
-
-		select {
-		case msg := <-d.serverMessageChannel:
-			if framebufferUpdateMessage, ok := msg.(*vnc.FramebufferUpdateMessage); ok {
-				if len(framebufferUpdateMessage.Rectangles) == 0 {
-					return fmt.Errorf("⚠️ Frame update did not have any rectangles")
-				}
-				fmt.Fprintf(os.Stderr, "🖼️ New framebuffer update with %d rectangles\n",
-					len(framebufferUpdateMessage.Rectangles))
-
-				for _, rect := range framebufferUpdateMessage.Rectangles {
-					switch encoding := rect.Enc.(type) {
-					case *DesktopSizePseudoEncoding:
-						w, h := int(d.vncClient.FrameBufferWidth), int(d.vncClient.FrameBufferHeight)
-						d.frameBuffer = image.NewRGBA(image.Rect(0, 0, w, h))
-						fmt.Fprintf(os.Stderr, "🖥️ New desktop size is %dx%d, resized framebuffer\n", w, h)
-						continue
-					case *vnc.RawEncoding:
-						for i, c := range encoding.Colors {
-							x, y := i%int(rect.Width), i/int(rect.Width)
-							r, g, b := uint8(c.R), uint8(c.G), uint8(c.B)
-							d.frameBuffer.Set(int(rect.X)+x, int(rect.Y)+y, color.RGBA{r, g, b, 255})
-						}
-					default:
-						return fmt.Errorf("⚠️ Frame had unknown encoding %s", encoding)
-					}
-				}
-
-				if debugVNC {
-					file, err := os.Create("framebuffer.png")
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "⚠️ Failed to create framebuffer file: %v\n", err)
-					} else {
-						if err := png.Encode(file, d.frameBuffer); err != nil {
-							fmt.Fprintf(os.Stderr, "⚠️ Failed to encode framebuffer: %v\n", err)
-						}
-						_ = file.Close()
-					}
-				}
-
-				return nil
-			} else {
-				// Ignore messages we didn't ask for
-				fmt.Fprintln(os.Stderr, "⚠️ Ignoring unknown message type", msg.Type(), msg)
-				continue
-			}
-		case <-time.After(30 * time.Second):
-			fmt.Fprintf(os.Stderr, "⏱️ Framebuffer update timed out after 30s. ")
-			// The built-in VNC server in Virtualization.framework will sometimes
-			// fail to deliver a framebuffer update, even though the VM view shows
-			// new content.
-			if (incremental) {
-				// As a first step, we try a full update, which according to
-				// RFC 6143 7.5.3 should result in the server sending the entire
-				// contents of the specified area as soon as possible.
-				fmt.Fprintf(os.Stderr, "Switching to full update\n")
-				incremental = false
-			} else {
-				// However even full updates may in some cases fail to trigger
-				// an update from the VZ VNC server. As a second step, we move
-				// the mouse, which should result in an update (as long as the
-				// VM shows a local cursor).
-				fmt.Fprintf(os.Stderr, "Moving mouse to trigger update\n")
-				if err := d.vncClient.PointerEvent(0, w-1, 0); err != nil {
-					return err
-				}
-				time.Sleep(1 * time.Second)
-				if err := d.vncClient.PointerEvent(0, 0, 0); err != nil {
-					return err
-				}
-			}
-			continue
-		case <-d.ctx.Done():
-			return d.ctx.Err()
-		}
-	}
+	return d.session.WaitForFramebufferUpdate(d.ctx)
 }
 
 type DesktopSizePseudoEncoding struct{}
