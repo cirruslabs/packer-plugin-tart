@@ -132,12 +132,15 @@ func (d *customDriver) SendKey(key rune, action bootcommand.KeyAction) error {
 		fmt.Fprintf(os.Stderr, "🖱️ Clicking at '%s's center (%d, %d) ...\n",
 			clickString, centerX, centerY)
 
-		if err := d.vncClient.PointerEvent(vnc.ButtonLeft, uint16(centerX), uint16(centerY)); err != nil {
-			return err
-		}
-		time.Sleep(100 * time.Millisecond)
-		if err := d.vncClient.PointerEvent(0, uint16(centerX), uint16(centerY)); err != nil {
-			return err
+		// Move mouse to position, then press and release to click
+		buttons := []vnc.ButtonMask{0, vnc.ButtonLeft, 0}
+		for i, button := range buttons {
+			if err := d.vncClient.PointerEvent(button, uint16(centerX), uint16(centerY)); err != nil {
+				return err
+			}
+			if i != len(buttons)-1 {
+				time.Sleep(100 * time.Millisecond)
+			}
 		}
 	default:
 		switch {
