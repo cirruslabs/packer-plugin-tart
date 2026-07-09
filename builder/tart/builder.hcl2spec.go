@@ -98,6 +98,8 @@ type FlatConfig struct {
 	Rosetta                   *string           `mapstructure:"rosetta" cty:"rosetta" hcl:"rosetta"`
 	RunExtraArgs              []string          `mapstructure:"run_extra_args" cty:"run_extra_args" hcl:"run_extra_args"`
 	IpExtraArgs               []string          `mapstructure:"ip_extra_args" cty:"ip_extra_args" hcl:"ip_extra_args"`
+	VNCRecordingDir           *string           `mapstructure:"vnc_recording_dir" cty:"vnc_recording_dir" hcl:"vnc_recording_dir"`
+	VNCRecordingInterval      *string           `mapstructure:"vnc_recording_interval" cty:"vnc_recording_interval" hcl:"vnc_recording_interval"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -200,6 +202,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"rosetta":                      &hcldec.AttrSpec{Name: "rosetta", Type: cty.String, Required: false},
 		"run_extra_args":               &hcldec.AttrSpec{Name: "run_extra_args", Type: cty.List(cty.String), Required: false},
 		"ip_extra_args":                &hcldec.AttrSpec{Name: "ip_extra_args", Type: cty.List(cty.String), Required: false},
+		"vnc_recording_dir":            &hcldec.AttrSpec{Name: "vnc_recording_dir", Type: cty.String, Required: false},
+		"vnc_recording_interval":       &hcldec.AttrSpec{Name: "vnc_recording_interval", Type: cty.String, Required: false},
 	}
 	return s
 }
