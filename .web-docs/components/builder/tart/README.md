@@ -176,7 +176,11 @@ command, they will be replaced by the proper key:
 
 -   `<leftShift> <rightShift>` - Simulates pressing the shift key.
 
--   `<leftSuper> <rightSuper>` - Simulates pressing the ⌘ or Windows key.
+-   `<leftSuper> <rightSuper>` - Simulates pressing the super key.
+
+-   `<leftCommand> <rightCommand>` - Simulates pressing the ⌘ key.
+
+-   `<leftOption> <rightOption>` - Simulates pressing the ⌥ key.
 
   - `<wait> <wait5> <wait10>` - Adds a 1, 5 or 10 second pause before
     sending any additional keys. This is useful if you have to generally
@@ -274,8 +278,6 @@ For more examples of various boot commands, see the sample projects from our
 
 Additionally, Tart builder supports the following custom commands:
 
-* `<leftCommand> <rightCommand>` - Simulates pressing the ⌘ key.
-* `<leftOption> <rightOption>` - Simulates pressing the ⌥ key.
 * `<wait 'string'>` — waits for the given string to appear in the VM's screen output
     * the `string` can be a simple word, a sentence or a regular expression
     * alternative to `<waitXX>` command with large values
