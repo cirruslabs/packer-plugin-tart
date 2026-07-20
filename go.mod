@@ -4,7 +4,7 @@ go 1.25.11
 
 require (
 	github.com/apparentlymart/go-cidr v1.1.1
-	github.com/diskfs/go-diskfs v1.9.3
+	github.com/diskfs/go-diskfs v1.9.4
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/packer-plugin-sdk v0.6.10
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
