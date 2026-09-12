@@ -114,8 +114,26 @@ func (s *stepRun) Run(ctx context.Context, state multistep.StateBag) multistep.S
 		}
 	}()
 
+	needsVNCSession := !config.DisableVNC && (len(config.BootCommand) > 0 || config.VNCRecordingDir != "")
+	var vncSession *vncSession
+	if needsVNCSession {
+		vncConnection, ok := connectToTartVNC(ctx, state, ui, stdout)
+		if !ok {
+			return multistep.ActionHalt
+		}
+		state.Put("vnc-connection", vncConnection)
+		vncSession = vncConnection.session
+
+		if config.VNCRecordingDir != "" {
+			if !startVNCRecording(ctx, state, config, ui, vncSession) {
+				return multistep.ActionHalt
+			}
+		}
+	}
+
 	if len(config.BootCommand) > 0 && !config.DisableVNC {
-		if !typeBootCommandOverVNC(ctx, state, config, ui, stdout) {
+		vncDriver := newCustomDriver(vncSession, config, ctx)
+		if !typeBootCommandOverVNC(ctx, state, config, ui, vncDriver) {
 			return multistep.ActionHalt
 		}
 	}
@@ -132,12 +150,23 @@ func (u uiWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+type vncConnection struct {
+	session *vncSession
+	netConn net.Conn
+}
+
+func (c *vncConnection) Close() {
+	c.session.vncClient.Close()
+	_ = c.netConn.Close()
+}
+
 // Cleanup stops the VM.
 func (s *stepRun) Cleanup(state multistep.StateBag) {
 	config := state.Get("config").(*Config)
 	ui := state.Get("ui").(packersdk.Ui)
 	cmd := state.Get("tart-cmd").(*exec.Cmd)
 	if cmd == nil || cmd.ProcessState != nil {
+		cleanupVNCResources(state, ui)
 		return // Nothing to shut down
 	}
 
@@ -170,6 +199,140 @@ func (s *stepRun) Cleanup(state multistep.StateBag) {
 	// so that we properly read and close stdout/stderr.
 	ui.Say("Waiting for the tart process to exit...")
 	_, _ = cmd.Process.Wait()
+
+	cleanupVNCResources(state, ui)
+}
+
+func connectToTartVNC(
+	ctx context.Context,
+	state multistep.StateBag,
+	ui packersdk.Ui,
+	tartRunStdout *bytes.Buffer,
+) (*vncConnection, bool) {
+	ui.Say("Waiting for VNC server credentials from Tart...")
+
+	vncCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	var vncPassword string
+	var vncHost string
+	var vncPort string
+
+	for {
+		matches := vncRegexp.FindStringSubmatch(tartRunStdout.String())
+		if len(matches) == 1+vncRegexp.NumSubexp() {
+			vncPassword = matches[1]
+			vncHost = matches[2]
+			vncPort = matches[3]
+
+			break
+		}
+
+		select {
+		case <-vncCtx.Done():
+			return nil, false
+		case <-time.After(time.Second):
+			// continue
+		}
+	}
+
+	ui.Say("Retrieved VNC credentials, connecting...")
+	ui.Sayf("If you want to view the screen of the VM, connect via VNC with the password \"%s\" to\n"+
+		"vnc://%s:%s", vncPassword, vncHost, vncPort)
+
+	dialer := net.Dialer{}
+	netConn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%s", vncHost, vncPort))
+	if err != nil {
+		err := fmt.Errorf("Failed to connect to Tart's VNC server: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+
+		return nil, false
+	}
+
+	serverMessageChannel := make(chan vnc.ServerMessage)
+	vncClient, err := vnc.Client(netConn, &vnc.ClientConfig{
+		Auth: []vnc.ClientAuth{
+			&vnc.PasswordAuth{Password: vncPassword},
+		},
+		ServerMessageCh: serverMessageChannel,
+	})
+	if err != nil {
+		err := fmt.Errorf("Failed to connect to Tart's VNC server: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+
+		_ = netConn.Close()
+		return nil, false
+	}
+
+	ui.Say("Connected to VNC server!")
+
+	err = vncClient.SetEncodings([]vnc.Encoding{
+		&vnc.RawEncoding{},
+		&DesktopSizePseudoEncoding{},
+	})
+	if err != nil {
+		err := fmt.Errorf("Failed to set VNC encoding: %s", err)
+		state.Put("error", err)
+		ui.Error(err.Error())
+		vncClient.Close()
+		_ = netConn.Close()
+		return nil, false
+	}
+
+	return &vncConnection{
+		session: newVNCSession(vncClient, serverMessageChannel),
+		netConn: netConn,
+	}, true
+}
+
+func startVNCRecording(
+	ctx context.Context,
+	state multistep.StateBag,
+	config *Config,
+	ui packersdk.Ui,
+	session *vncSession,
+) bool {
+	recorder := newVNCRecorder(session, config.VNCRecordingDir, config.VNCRecordingInterval)
+	if err := recorder.Prepare(); err != nil {
+		state.Put("error", err)
+		ui.Error(err.Error())
+		return false
+	}
+
+	ui.Sayf("Recording VNC snapshots to %s every %s...",
+		config.VNCRecordingDir, config.VNCRecordingInterval)
+
+	handle := startVNCRecorder(ctx, recorder)
+	state.Put("vnc-recorder", handle)
+
+	go func() {
+		<-handle.done
+		if err := handle.Err(); err != nil {
+			ui.Error(fmt.Sprintf("VNC recording failed: %s", err))
+			state.Put("error", err)
+			cancelBuild, ok := state.Get("cancel-build").(context.CancelFunc)
+			if ok && cancelBuild != nil {
+				cancelBuild()
+			}
+		}
+	}()
+
+	return true
+}
+
+func cleanupVNCResources(state multistep.StateBag, ui packersdk.Ui) {
+	if rawRecorder, ok := state.GetOk("vnc-recorder"); ok {
+		if err := rawRecorder.(*vncRecorderHandle).Stop(); err != nil {
+			ui.Error(fmt.Sprintf("VNC recording failed: %s", err))
+			state.Put("error", err)
+		}
+	}
+
+	if rawConnection, ok := state.GetOk("vnc-connection"); ok {
+		rawConnection.(*vncConnection).Close()
+	}
 }
 
 func typeBootCommandOverVNC(
@@ -177,7 +340,7 @@ func typeBootCommandOverVNC(
 	state multistep.StateBag,
 	config *Config,
 	ui packersdk.Ui,
-	tartRunStdout *bytes.Buffer,
+	vncDriver *customDriver,
 ) bool {
 	ui.Say("Typing boot commands over VNC...")
 
@@ -204,79 +367,6 @@ func typeBootCommandOverVNC(
 			HTTPPort: httpPort,
 		}
 	}
-
-	ui.Say("Waiting for VNC server credentials from Tart...")
-
-	vncCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-
-	var vncPassword string
-	var vncHost string
-	var vncPort string
-
-	for {
-		matches := vncRegexp.FindStringSubmatch(tartRunStdout.String())
-		if len(matches) == 1+vncRegexp.NumSubexp() {
-			vncPassword = matches[1]
-			vncHost = matches[2]
-			vncPort = matches[3]
-
-			break
-		}
-
-		select {
-		case <-vncCtx.Done():
-			return false
-		case <-time.After(time.Second):
-			// continue
-		}
-	}
-
-	ui.Say("Retrieved VNC credentials, connecting...")
-	ui.Sayf("If you want to view the screen of the VM, connect via VNC with the password \"%s\" to\n"+
-		"vnc://%s:%s", vncPassword, vncHost, vncPort)
-
-	dialer := net.Dialer{}
-	netConn, err := dialer.DialContext(ctx, "tcp", fmt.Sprintf("%s:%s", vncHost, vncPort))
-	if err != nil {
-		err := fmt.Errorf("Failed to connect to Tart's VNC server: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-
-		return false
-	}
-	defer netConn.Close()
-
-	serverMessageChannel := make(chan vnc.ServerMessage)
-	vncClient, err := vnc.Client(netConn, &vnc.ClientConfig{
-		Auth: []vnc.ClientAuth{
-			&vnc.PasswordAuth{Password: vncPassword},
-		},
-		ServerMessageCh: serverMessageChannel,
-	})
-	if err != nil {
-		err := fmt.Errorf("Failed to connect to Tart's VNC server: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-
-		return false
-	}
-	defer vncClient.Close()
-
-	ui.Say("Connected to VNC server!")
-
-	err = vncClient.SetEncodings([]vnc.Encoding{
-		&vnc.RawEncoding{},
-		&DesktopSizePseudoEncoding{},
-	})
-	if err != nil {
-		err := fmt.Errorf("Failed to set VNC encoding: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return false
-	}
-
-	vncDriver := newCustomDriver(vncClient, serverMessageChannel, config, ctx)
 
 	if config.VNCConfig.BootWait > 0 {
 		message := fmt.Sprintf("Waiting %v after the VM has booted...", config.VNCConfig.BootWait)

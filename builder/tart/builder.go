@@ -35,18 +35,20 @@ type Config struct {
 	AlwaysPull      bool     `mapstructure:"always_pull"`
 	PullConcurrency uint16   `mapstructure:"pull_concurrency"`
 
-	CpuCount          uint8         `mapstructure:"cpu_count"`
-	CreateGraceTime   time.Duration `mapstructure:"create_grace_time"`
-	DiskSizeGb        uint16        `mapstructure:"disk_size_gb"`
-	DiskFormat        string        `mapstructure:"disk_format"`
-	RecoveryPartition string        `mapstructure:"recovery_partition"`
-	Display           string        `mapstructure:"display"`
-	Headless          bool          `mapstructure:"headless"`
-	MemoryGb          uint16        `mapstructure:"memory_gb"`
-	Recovery          bool          `mapstructure:"recovery"`
-	Rosetta           string        `mapstructure:"rosetta"`
-	RunExtraArgs      []string      `mapstructure:"run_extra_args"`
-	IpExtraArgs       []string      `mapstructure:"ip_extra_args"`
+	CpuCount             uint8         `mapstructure:"cpu_count"`
+	CreateGraceTime      time.Duration `mapstructure:"create_grace_time"`
+	DiskSizeGb           uint16        `mapstructure:"disk_size_gb"`
+	DiskFormat           string        `mapstructure:"disk_format"`
+	RecoveryPartition    string        `mapstructure:"recovery_partition"`
+	Display              string        `mapstructure:"display"`
+	Headless             bool          `mapstructure:"headless"`
+	MemoryGb             uint16        `mapstructure:"memory_gb"`
+	Recovery             bool          `mapstructure:"recovery"`
+	Rosetta              string        `mapstructure:"rosetta"`
+	RunExtraArgs         []string      `mapstructure:"run_extra_args"`
+	IpExtraArgs          []string      `mapstructure:"ip_extra_args"`
+	VNCRecordingDir      string        `mapstructure:"vnc_recording_dir"`
+	VNCRecordingInterval time.Duration `mapstructure:"vnc_recording_interval"`
 
 	ctx interpolate.Context
 }
@@ -105,6 +107,18 @@ func (b *Builder) Prepare(raws ...interface{}) (generatedVars []string, warnings
 			"for ASIF disks")
 	}
 
+	if b.config.VNCRecordingDir != "" {
+		if b.config.DisableVNC {
+			return nil, nil, fmt.Errorf("vnc_recording_dir requires VNC; remove disable_vnc or set it to false")
+		}
+		if b.config.VNCRecordingInterval == 0 {
+			b.config.VNCRecordingInterval = time.Second
+		}
+		if b.config.VNCRecordingInterval < 0 {
+			return nil, nil, fmt.Errorf("vnc_recording_interval must be greater than 0")
+		}
+	}
+
 	if errs := b.config.CommunicatorConfig.Prepare(&b.config.ctx); len(errs) != 0 {
 		return nil, nil, packer.MultiErrorAppend(nil, errs...)
 	}
@@ -152,7 +166,7 @@ func (b *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (pack
 	)
 
 	communicatorConfigured := b.config.CommunicatorConfig.Type != "none"
-	if len(b.config.BootCommand) > 0 || communicatorConfigured {
+	if len(b.config.BootCommand) > 0 || communicatorConfigured || b.config.VNCRecordingDir != "" {
 		steps = append(steps, new(stepRun))
 	}
 
