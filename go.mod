@@ -5,12 +5,12 @@ go 1.25.11
 require (
 	github.com/apparentlymart/go-cidr v1.1.1
 	github.com/diskfs/go-diskfs v1.9.3
-	github.com/hashicorp/hcl/v2 v2.24.0
+	github.com/hashicorp/hcl/v2 v2.25.0
 	github.com/hashicorp/packer-plugin-sdk v0.6.10
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/samber/lo v1.53.0
 	github.com/stretchr/testify v1.12.1
-	github.com/zclconf/go-cty v1.17.0
+	github.com/zclconf/go-cty v1.19.0
 	howett.net/plist v1.0.1
 )
 
@@ -33,6 +33,7 @@ require (
 	github.com/anchore/go-lzo v0.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
+	github.com/apparentlymart/go-textseg/v17 v17.0.1 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.37.2 // indirect
